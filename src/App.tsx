@@ -1,13 +1,13 @@
 
-
 import './App.css'
-import Login from './Login/Login'
+import AppRouter from './Components/AppRouter'
+
 
 function App() {
 
   return (
     <>
-      <Login/>
+      <AppRouter />
     </>
   )
 }
