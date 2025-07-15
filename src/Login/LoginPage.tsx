@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const LoginPage = () => {
-  
+
   useEffect(() => {
     const container = document.getElementById('container');
     const switchToRegister = document.getElementById('switch-to-register');
@@ -27,6 +27,52 @@ const LoginPage = () => {
     };
   }, []);
 
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [comfpassword, setComfPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const signUp = async () => {
+    const user = {
+      username,
+      email,
+      mobile,
+      password,
+      comfpassword
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SignUp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(user)
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          // redirect to verify page
+          // window.location.href = "/verify-account";
+          
+          console.log(json);
+
+          console.log("Signup successful, redirecting to verify page...");
+        } else {
+          setMessage(json.message || "Signup failed");
+        }
+      } else {
+        setMessage("Registration failed. Please try again");
+      }
+    } catch (error) {
+      setMessage("Error connecting to server");
+      console.error("Signup Error:", error);
+    }
+  };
+
   return (
     <>
       <div className="w-full flex items-center justify-center my-40">
@@ -49,18 +95,18 @@ const LoginPage = () => {
                     <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
                     <div className="mb-4">
                       <label htmlFor="login-email" className="block mb-2 text-sm">Email</label>
-                      <input type="email" name="email" id="login-email"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your email"/>
+                      <input type="email" name="login-email" id="login-email"
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your email" />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="login-password" className="block mb-2 text-sm">Password</label>
                       <input type="password" name="password" id="login-password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your password"/>
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your password" />
                     </div>
                     <div className="flex items-center justify-between mb-4">
                       <label className="flex items-center">
-                        <input type="checkbox" className="mr-2"/>
-                          <span className="text-sm">Remember Me</span>
+                        <input type="checkbox" className="mr-2" />
+                        <span className="text-sm">Remember Me</span>
                       </label>
                       <a href="#" className="text-sm text-blue-600 hover:underline">Forgot Password?</a>
                     </div>
@@ -110,42 +156,52 @@ const LoginPage = () => {
                   </form>
                 </div>
               </div>
+
               {/* <!-- Registration Section --> */}
               <div id="register-section" className="w-full flex absolute top-0 left-full h-full">
                 <div className="w-1/2 bg-white p-12 flex items-center justify-center">
-                  <form id="register-form" className="w-full max-w-md">
+
+                  <div className="w-full max-w-md">
+
                     <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
                     <div className="mb-4">
-                      <label htmlFor="register-username" className="block mb-2 text-sm">Username</label>
-                      <input type="text" id="register-username" className="w-full px-3 py-2 border rounded-md"
-                        placeholder="Choose a username"/>
+                      <label htmlFor="username" className="block mb-2 text-sm">Username</label>
+                      <input type="text" id="username" className="w-full px-3 py-2 border rounded-md"
+                        placeholder="Choose a username" value={username} onChange={e => setUsername(e.target.value)}/>
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="register-email" className="block mb-2 text-sm">Email</label>
-                      <input type="email" id="register-email" className="w-full px-3 py-2 border rounded-md"
-                        placeholder="Enter your email"/>
+                      <label htmlFor="email" className="block mb-2 text-sm">Email</label>
+                      <input type="email" id="email" className="w-full px-3 py-2 border rounded-md"
+                        placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)}/>
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="register-password" className="block mb-2 text-sm">Password</label>
-                      <input type="password" id="register-password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Create a password"/>
+                      <label htmlFor="mobile" className="block mb-2 text-sm">Mobile Number</label>
+                      <input type="text" id="mobile" className="w-full px-3 py-2 border rounded-md"
+                        placeholder="Enter your mobile number" value={mobile} onChange={e => setMobile(e.target.value)}/>
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="register-confirm-password" className="block mb-2 text-sm">Confirm
+                      <label htmlFor="password" className="block mb-2 text-sm">Password</label>
+                      <input type="password" id="password"
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Create a password"  value={password} onChange={e => setPassword(e.target.value)}/>
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="confirm-password" className="block mb-2 text-sm">Confirm
                         Password</label>
-                      <input type="password" id="register-confirm-password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Confirm your password" />
+                      <input type="password" id="confirm-password"
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Confirm your password"  value={comfpassword} onChange={e => setComfPassword(e.target.value)}/>
                     </div>
-                    <button type="submit"
-                      className="w-full cursor-pointer bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Sign
-                      Up</button>
+                    <button type="button" onClick={signUp}
+                      className="w-full cursor-pointer bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Sign Up
+                    </button>
                     <div className="mt-4 text-center">
                       <p className="text-sm">Already have an account?
                         <button type="button" id="switch-to-login"
                           className="text-blue-600 hover:underline cursor-pointer">Login</button>
                       </p>
                     </div>
-                  </form>
+
+                  </div>
+
                 </div>
                 <div className="w-1/2 bg-blue-600 text-white flex items-center justify-center">
                   <div className="text-center">
@@ -154,6 +210,8 @@ const LoginPage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* <!-- Registration Section --> */}
 
             </div>
           </div>

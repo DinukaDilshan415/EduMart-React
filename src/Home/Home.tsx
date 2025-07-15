@@ -1,9 +1,12 @@
+import Header from "../Header/Header"
+import MainNav from "../Navigation/MainNav"
 
 
 const Home = () => {
   return (
     <>
-      <div>hello</div>
+      {/* <Header /> */}
+      <MainNav/>
     </>
   )
 }
