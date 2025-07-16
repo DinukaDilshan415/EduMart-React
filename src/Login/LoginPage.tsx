@@ -56,13 +56,13 @@ const LoginPage = () => {
         const json = await response.json();
         if (json.status) {
           // redirect to verify page
-          // window.location.href = "/verify-account";
+          window.location.href = "/Auth/VrifyAccount";
           
           console.log(json);
 
           console.log("Signup successful, redirecting to verify page...");
         } else {
-          setMessage(json.message || "Signup failed");
+          console.log(json.message);
         }
       } else {
         setMessage("Registration failed. Please try again");

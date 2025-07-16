@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "../Login/Login";
 import Home from "../Home/Home";
+import VerifyAccount from "../EmailVerification/VerifyAccount";
 
 
 const router = createBrowserRouter([
@@ -11,11 +12,15 @@ const router = createBrowserRouter([
     {
       path: "/home",
       Component: Home
+    },
+    {
+      path: "/Auth/VrifyAccount",
+      Component: VerifyAccount
     }
   ]);
 
 const AppRouter = () => {
-    return (<>return <RouterProvider router={router} /></>)
+    return (<><RouterProvider router={router} /></>)
 }
 
 export default AppRouter
