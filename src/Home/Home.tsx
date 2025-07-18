@@ -5,7 +5,7 @@ import MainNav from "../Navigation/MainNav"
 const Home = () => {
   return (
     <>
-      {/* <Header /> */}
+      <Header />
       <MainNav/>
     </>
   )

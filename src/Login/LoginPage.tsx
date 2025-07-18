@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
 
@@ -63,6 +64,7 @@ const LoginPage = () => {
           console.log("Signup successful, redirecting to verify page...");
         } else {
           console.log(json.message);
+          toast.error(json.message);
         }
       } else {
         setMessage("Registration failed. Please try again");
@@ -72,6 +74,8 @@ const LoginPage = () => {
       console.error("Signup Error:", error);
     }
   };
+
+  const notify = () => toast.error('Something went wrong!');
 
   return (
     <>
