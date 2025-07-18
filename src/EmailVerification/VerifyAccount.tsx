@@ -1,14 +1,55 @@
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 
 const VerifyAccount = () => {
 
-return (
+  const [verificationCode, setVerificationCode] = useState("");
+
+  const verifyAccount = async () => {
+    const verify = {
+      verificationCode
+    };
+
+    try {
+      const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/VerifyAccount", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(verify)
+      });
+
+      if (response.ok) {   
+        const json = await response.json();
+
+        if (json.status) {
+
+          window.location.href = "/home";
+
+          console.log(json);
+          console.log("Verification successful, redirecting to home page...");
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("Verification failed. Please try again");
+        toast.error("Verification failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something Wrong ! Please try again");
+      console.error("Verification Error:", error);
+    }
+  };
+
+  return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-sm p-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2">
           Check your email
         </h2>
-        
+
         <p className="text-gray-600 mb-6">
           Validate Your Account by entering the six-digit code
         </p>
@@ -20,19 +61,16 @@ return (
             </label>
             <input
               type="text"
-              id="code"
-            //   value={code}
-            //   onChange={(e) => setCode(e.target.value)}
+              id="verificationCode"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
               placeholder="Enter code"
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               maxLength={6}
             />
           </div>
 
-          <button
-            
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
+          <button onClick={verifyAccount} className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors cursor-pointer">
             Continue
           </button>
         </div>

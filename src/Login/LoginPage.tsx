@@ -45,7 +45,7 @@ const LoginPage = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/SignUp", {
+      const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/SignUp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -67,10 +67,11 @@ const LoginPage = () => {
           toast.error(json.message);
         }
       } else {
-        setMessage("Registration failed. Please try again");
+        console.log("Registration failed. Please try again");
+        toast.error("Registration failed. Please try again");
       }
     } catch (error) {
-      setMessage("Error connecting to server");
+      toast.error("Error connecting to server");
       console.error("Signup Error:", error);
     }
   };
