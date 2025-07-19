@@ -28,6 +28,7 @@ const LoginPage = () => {
     };
   }, []);
 
+  // Registration functionality
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -45,8 +46,9 @@ const LoginPage = () => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/SignUp", {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SignUp", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         },
@@ -58,7 +60,7 @@ const LoginPage = () => {
         if (json.status) {
           // redirect to verify page
           window.location.href = "/Auth/VrifyAccount";
-          
+
           console.log(json);
 
           console.log("Signup successful, redirecting to verify page...");
@@ -75,15 +77,62 @@ const LoginPage = () => {
       console.error("Signup Error:", error);
     }
   };
+  // Registration functionality
+
+  // Login functionality
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const signIn = async () => {
+    const signIn = {
+      loginEmail,
+      loginPassword
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SignIn", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(signIn)
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json);
+
+          if (json.message == "not verified") {
+            window.location.href = "/Auth/VrifyAccount";
+          } else {
+            window.location.href = "/home";
+          }
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("LogIn failed. Please try again");
+        toast.error("LogIn failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("SignIn Error:", error);
+    }
+  };
+
+  // Login functionality
 
   const notify = () => toast.error('Something went wrong!');
 
   return (
     <>
-      <div className="w-full flex items-center justify-center my-40">
+      <div className="w-full flex items-center justify-center mt-36 mb-16">
         <div className="w-10/12 flex items-center justify-center">
 
-          <div className="relative w-full max-w-4xl h-[600px] overflow-hidden shadow-lg rounded-2xl">
+          <div className="relative w-full max-w-4xl h-[600px] overflow-hidden shadow-2xs rounded-2xl">
             <div id="container" className="absolute inset-0 flex transition-transform duration-500 ease-in-out">
 
               {/* <!-- Login Section --> */}
@@ -95,18 +144,18 @@ const LoginPage = () => {
                   </div>
                 </div>
                 <div className="w-full md:w-1/2 bg-white p-12 flex items-center justify-center">
-                  <form id="login-form" className="w-full max-w-md" method="post"
-                    action="http://localhost:8080/WEB_II-Project1/SignIn">
+                  <div className="w-full max-w-md">
+
                     <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
                     <div className="mb-4">
                       <label htmlFor="login-email" className="block mb-2 text-sm">Email</label>
                       <input type="email" name="login-email" id="login-email"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your email" />
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="login-password" className="block mb-2 text-sm">Password</label>
                       <input type="password" name="password" id="login-password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your password" />
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Enter your password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
                     </div>
                     <div className="flex items-center justify-between mb-4">
                       <label className="flex items-center">
@@ -115,7 +164,7 @@ const LoginPage = () => {
                       </label>
                       <a href="#" className="text-sm text-blue-600 hover:underline">Forgot Password?</a>
                     </div>
-                    <button type="submit"
+                    <button type="submit" onClick={signIn}
                       className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition cursor-pointer">Login</button>
                     <div className="mt-4 text-center">
                       <p className="text-sm">Don't have an account?
@@ -158,7 +207,7 @@ const LoginPage = () => {
                       </div>
 
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
 
@@ -172,28 +221,28 @@ const LoginPage = () => {
                     <div className="mb-4">
                       <label htmlFor="username" className="block mb-2 text-sm">Username</label>
                       <input type="text" id="username" className="w-full px-3 py-2 border rounded-md"
-                        placeholder="Choose a username" value={username} onChange={e => setUsername(e.target.value)}/>
+                        placeholder="Choose a username" value={username} onChange={e => setUsername(e.target.value)} />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="email" className="block mb-2 text-sm">Email</label>
                       <input type="email" id="email" className="w-full px-3 py-2 border rounded-md"
-                        placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)}/>
+                        placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="mobile" className="block mb-2 text-sm">Mobile Number</label>
                       <input type="text" id="mobile" className="w-full px-3 py-2 border rounded-md"
-                        placeholder="Enter your mobile number" value={mobile} onChange={e => setMobile(e.target.value)}/>
+                        placeholder="Enter your mobile number" value={mobile} onChange={e => setMobile(e.target.value)} />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="password" className="block mb-2 text-sm">Password</label>
                       <input type="password" id="password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Create a password"  value={password} onChange={e => setPassword(e.target.value)}/>
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} />
                     </div>
                     <div className="mb-4">
                       <label htmlFor="confirm-password" className="block mb-2 text-sm">Confirm
                         Password</label>
                       <input type="password" id="confirm-password"
-                        className="w-full px-3 py-2 border rounded-md" placeholder="Confirm your password"  value={comfpassword} onChange={e => setComfPassword(e.target.value)}/>
+                        className="w-full px-3 py-2 border rounded-md" placeholder="Confirm your password" value={comfpassword} onChange={e => setComfPassword(e.target.value)} />
                     </div>
                     <button type="button" onClick={signUp}
                       className="w-full cursor-pointer bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Sign Up

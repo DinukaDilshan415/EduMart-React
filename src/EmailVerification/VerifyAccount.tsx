@@ -12,15 +12,16 @@ const VerifyAccount = () => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/VerifyAccount", {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/VerifyAccount", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify(verify)
       });
 
-      if (response.ok) {   
+      if (response.ok) {
         const json = await response.json();
 
         if (json.status) {
@@ -42,6 +43,67 @@ const VerifyAccount = () => {
       console.error("Verification Error:", error);
     }
   };
+
+  //resend email
+  // const reSendEmail = async () => {
+  //   try {
+  //     const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/ReSendVerification");
+
+  //     if (response.ok) {
+  //       const json = await response.json();
+
+  //       if (json.status) {
+  //         //email send successfully   
+
+  //         console.log(json);
+  //         console.log("New Verification Code Send");
+  //       } else {
+  //         console.log(json.message);
+  //         toast.error(json.message);
+  //       }
+  //     } else {
+  //       console.log("Verification Code Send failed. Please try again");
+  //       toast.error("Verification Code Send failed. Please try again");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Something Wrong ! Please try again");
+  //     console.error("Verification Code Send Error:", error);
+  //   }
+  // };
+
+  const reSendEmail = async () => {
+  // Use toast.promise to handle loading, success, and error alerts
+  toast.promise(
+    fetch("http://localhost:8080/Edumart-Backend/ReSendVerification", {
+      method: "GET",
+      credentials: "include", // <- this sends cookies like JSESSIONID
+    }).then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Verification Code Send failed. Please try again");
+        }
+
+        const json = await response.json();
+
+        if (!json.status) {
+          throw new Error(json.message || "Verification failed");
+        }
+
+        // Success — return something to access in toast if needed
+        return json;
+      }),
+
+    {
+      pending: 'Sending verification email...',
+      success: 'New verification code sent successfully ✅',
+      error: {
+        render({ data }: { data: Error }) {
+          // data is the error object thrown in catch or in .then
+          return data.message || 'Something went wrong ❌';
+        }
+      }
+    }
+  );
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -77,10 +139,7 @@ const VerifyAccount = () => {
 
         <div className="mt-6 text-center">
           <span className="text-sm text-gray-600">Didn't get the code? </span>
-          <button
-
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium underline focus:outline-none cursor-pointer"
-          >
+          <button onClick={reSendEmail} className="text-sm text-blue-600 hover:text-blue-800 font-medium underline focus:outline-none cursor-pointer">
             Resend
           </button>
         </div>

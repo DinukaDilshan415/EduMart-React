@@ -5,7 +5,7 @@ import LoginPage from "./LoginPage"
 const Login = () => {
     return (
         <>
-            <div className="bg-gray-200 flex flex-col items-center justify-center min-h-screen">                
+            <div className="bg-gray-100 flex flex-col items-center justify-center min-h-screen">                
                 <Header />
                 <LoginPage />
                 <Footer/>
