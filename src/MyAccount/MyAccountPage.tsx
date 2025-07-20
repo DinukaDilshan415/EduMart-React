@@ -27,6 +27,28 @@ interface UserProfile {
   mobile: string;
 }
 
+interface UserPassword {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+type City = {
+  id: string;
+  name: string;
+};
+
+type Address = {
+  id?: number;
+  type: string;
+  full_name: string;
+  address: string;
+  cityName: string;
+  postal_code: string;
+  isDefault: boolean;
+  city?: City; // Optional for displaying city name
+};
+
 const MyAccountPage = () => {
   const [activeSection, setActiveSection] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +73,6 @@ const MyAccountPage = () => {
       });
 
       if (response.ok) {
-        console.log("Response received");
         const json = await response.json();
         if (json.status) {
           setAccountData(json);
@@ -76,45 +97,53 @@ const MyAccountPage = () => {
 
   // set account data
 
+  const [cities, setCities] = useState<City[]>([]);
+
+  // load city data
+  // const [accountData, setAccountData] = useState<AccountData>({
+  //   username: '',
+  //   email: '',
+  //   mobile: '',
+  //   created_at: ''
+  // });
+
+  const loadCityData = async () => {
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/LoadCityData", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+
+        console.log("City data received:", json);
+        setCities(json); // Store city data in state
+
+      } else {
+        console.log("City data load failed. Please try again");
+        toast.error("City data load failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again" + error);
+      console.error("City data load Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadCityData();
+    loadAddresses();
+  }, []);
+
+  // load city data
+
   const [orders] = useState([
     { id: '#ORD001', date: '2024-07-15', status: 'Delivered', total: '$129.99', items: 3 },
     { id: '#ORD002', date: '2024-07-10', status: 'Shipped', total: '$89.50', items: 2 },
     { id: '#ORD003', date: '2024-07-05', status: 'Processing', total: '$199.99', items: 4 },
     { id: '#ORD004', date: '2024-06-30', status: 'Delivered', total: '$59.99', items: 1 },
   ]);
-
-  const [addresses, setAddresses] = useState([
-    {
-      id: 1,
-      type: 'Home',
-      name: 'John Doe',
-      address: '123 Main Street, Apt 4B',
-      city: 'New York',
-      state: 'NY',
-      zip: '10001',
-      isDefault: true
-    },
-    {
-      id: 2,
-      type: 'Work',
-      name: 'John Doe',
-      address: '456 Business Ave, Suite 200',
-      city: 'New York',
-      state: 'NY',
-      zip: '10002',
-      isDefault: false
-    }
-  ]);
-
-  const [newAddress, setNewAddress] = useState({
-    type: 'Home',
-    name: '',
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    isDefault: false
-  });
 
   const menuItems = [
     { id: 'account', label: 'Account Information', icon: User, active: true },
@@ -132,32 +161,6 @@ const MyAccountPage = () => {
       case 'Processing': return 'text-yellow-600 bg-yellow-100';
       default: return 'text-gray-600 bg-gray-100';
     }
-  };
-
-  const handlePasswordChange = () => {
-    // Handle password change logic here
-    alert('Password changed successfully!');
-  };
-
-  const handleAddAddress = () => {
-    const newId = addresses.length + 1;
-    setAddresses([...addresses, { ...newAddress, id: newId }]);
-    setNewAddress({
-      type: 'Home',
-      name: '',
-      address: '',
-      city: '',
-      state: '',
-      zip: '',
-      isDefault: false
-    });
-    setShowAddressForm(false);
-    alert('Address added successfully!');
-  };
-
-  const handleDeleteAddress = (id: number) => {
-    setAddresses(addresses.filter(addr => addr.id !== id));
-    alert('Address deleted successfully!');
   };
 
   const renderAccountInfo = () => (
@@ -308,6 +311,194 @@ const MyAccountPage = () => {
     </div>
   );
 
+  //   const [addresses, setAddresses] = useState([
+  //   {
+  //     id: 1,
+  //     type: 'Home',
+  //     name: 'John Doe',
+  //     address: '123 Main Street, Apt 4B',
+  //     city: 'New York',
+  //     state: 'NY',
+  //     zip: '10001',
+  //     isDefault: true
+  //   },
+  //   {
+  //     id: 2,
+  //     type: 'Work',
+  //     name: 'John Doe',
+  //     address: '456 Business Ave, Suite 200',
+  //     city: 'New York',
+  //     state: 'NY',
+  //     zip: '10002',
+  //     isDefault: false
+  //   }
+  // ]);
+
+  // const [newAddress, setNewAddress] = useState({
+  //     type: 'Home',
+  //     fullName: '',
+  //     address: '',
+  //     city: '',
+  //     pCode: '',
+  //     isDefault: false
+  // });
+
+  //   const handleAddAddress = () => {
+  //   const newId = addresses.length + 1;
+  //   setAddresses([...addresses, { ...newAddress, id: newId }]);
+  //   setNewAddress({
+  //     type: 'Home',
+  //     fullName: '',
+  //     address: '',
+  //     city: '',
+  //     pCode: '',
+  //     isDefault: false
+  //   });
+  //   setShowAddressForm(false);
+  //   alert('Address added successfully!');
+  // };
+
+  // const handleDeleteAddress = (id: number) => {
+  //   setAddresses(addresses.filter(addr => addr.id !== id));
+  //   alert('Address deleted successfully!');
+  // };
+
+  // Address Registration functionality
+  // const [username, setUsername] = useState("");
+  // const [email, setEmail] = useState("");
+  // const [mobile, setMobile] = useState("");
+  // const [password, setPassword] = useState("");
+  // const [comfpassword, setComfPassword] = useState("");
+  // const [message, setMessage] = useState("");
+
+  // const signUp = async () => {
+  //   const user = {
+  //     username,
+  //     email,
+  //     mobile,
+  //     password,
+  //     comfpassword
+  //   };
+
+  //   try {
+  //     const response = await fetch("http://localhost:8080/Edumart-Backend/SignUp", {
+  //       method: "POST",
+  //       credentials: "include",
+  //       headers: {
+  //         "Content-Type": "application/json"
+  //       },
+  //       body: JSON.stringify(user)
+  //     });
+
+  //     if (response.ok) {
+  //       const json = await response.json();
+  //       if (json.status) {
+  //         // redirect to verify page
+  //         window.location.href = "/Auth/VrifyAccount";
+
+  //         console.log(json);
+
+  //         console.log("Signup successful, redirecting to verify page...");
+  //       } else {
+  //         console.log(json.message);
+  //         toast.error(json.message);
+  //       }
+  //     } else {
+  //       console.log("Registration failed. Please try again");
+  //       toast.error("Registration failed. Please try again");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Error connecting to server");
+  //     console.error("Signup Error:", error);
+  //   }
+  // };
+  //Address Registration functionality
+
+  const [newAddress, setNewAddress] = useState<Address>({
+    type: "",
+    full_name: "",
+    address: "",
+    cityName: "0",
+    postal_code: "",
+    isDefault: false,
+  });
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+
+  const saveNewAddress = async () => {
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newAddress)
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+
+          toast.success("Address saved!");
+          console.log("Address saved!");
+
+          setNewAddress({
+            type: "",
+            full_name: "",
+            address: "",
+            cityName: "",
+            postal_code: "",
+            isDefault: false,
+          });
+          setShowAddressForm(false);
+          loadAddresses();
+
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("Address Registration failed. Please try again");
+        toast.error("Address Registration failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Error connecting to server");
+      console.error("Address Registration Error:", error);
+    }
+  };
+
+  const loadAddresses = async () => {
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+
+        if (json.addreassList) {
+          setAddresses(json.addreassList as Address[]);
+          console.log("Addresses loaded successfully:", json.addreassList);
+        } else {
+          toast.warning("No addresses found.");
+          setAddresses([]);
+        }
+      } else {
+        console.log("Failed to load addresses");
+        toast.error("Failed to load addresses");
+      }
+    } catch (error) {
+      toast.error("Error connecting to server for get addresses");
+      console.error("Address Load Error:", error);
+    }
+  };
+
+  // renderr
+
   const renderAddresses = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
@@ -323,26 +514,24 @@ const MyAccountPage = () => {
 
       {showAddressForm && (
         <div className="mb-6 p-4 border border-gray-200 rounded-md bg-gray-50">
-          <form onSubmit={handleAddAddress} className="space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">Address Type</label>
-                <select
+                <label className="block text-sm font-medium text-gray-600 mb-2">Address Type (Eg : Home/Work)</label>
+                <input
+                  type="text"
                   value={newAddress.type}
                   onChange={(e) => setNewAddress({ ...newAddress, type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="Home">Home</option>
-                  <option value="Work">Work</option>
-                  <option value="Other">Other</option>
-                </select>
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={newAddress.name}
-                  onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                  value={newAddress.full_name}
+                  onChange={(e) => setNewAddress({ ...newAddress, full_name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
@@ -359,30 +548,26 @@ const MyAccountPage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">City</label>
-                <input
-                  type="text"
-                  value={newAddress.city}
-                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                <select
+                  value={newAddress.cityName}
+                  onChange={(e) => setNewAddress({ ...newAddress, cityName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
+                >
+                  <option value="0">Select a city</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">State</label>
+                <label className="block text-sm font-medium text-gray-600 mb-2">Postal Code</label>
                 <input
                   type="text"
-                  value={newAddress.state}
-                  onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">ZIP Code</label>
-                <input
-                  type="text"
-                  value={newAddress.zip}
-                  onChange={(e) => setNewAddress({ ...newAddress, zip: e.target.value })}
+                  value={newAddress.postal_code}
+                  onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
@@ -398,7 +583,7 @@ const MyAccountPage = () => {
               <label className="text-sm text-gray-600">Set as default address</label>
             </div>
             <div className="flex gap-2">
-              <button
+              <button onClick={saveNewAddress}
                 type="submit"
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200"
               >
@@ -412,7 +597,7 @@ const MyAccountPage = () => {
                 Cancel
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -431,29 +616,88 @@ const MyAccountPage = () => {
                 )}
               </div>
               <button
-                onClick={() => handleDeleteAddress(address.id)}
+                // onClick={() => handleDeleteAddress(address.id)}
                 className="text-red-500 hover:text-red-700"
               >
                 <X size={16} />
               </button>
             </div>
-            <h4 className="font-medium text-gray-800 mb-1">{address.name}</h4>
+            <h4 className="font-medium text-gray-800 mb-1"> {address.full_name} </h4>
             <p className="text-sm text-gray-600 mb-1">{address.address}</p>
-            <p className="text-sm text-gray-600">{address.city}, {address.state} {address.zip}</p>
+            <p className="text-sm text-gray-600">
+              {address.city?.name}, {address.postal_code
+}
+            </p>
+
           </div>
         ))}
       </div>
     </div>
   );
 
+  //update Password
+
+  // Password data
+  const [password, setPassword] = useState<UserPassword>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const updatePassword = async () => {
+
+    const updateData = {
+      currentPassword: password.currentPassword,
+      newPassword: password.newPassword,
+      confirmPassword: password.confirmPassword
+    };
+
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateUserPassword", {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json);
+          toast.success("Password updated successfully!");
+          // render Password section or reset fields
+          setPassword(prev => ({ ...prev, currentPassword: '' }));
+          setPassword(prev => ({ ...prev, newPassword: '' }));
+          setPassword(prev => ({ ...prev, confirmPassword: '' }));
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("Password update failed. Please try again");
+        toast.error("Password update failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("Password update Error:", error);
+    }
+  };
+
+
+  //update Password
+
   const renderPasswordChange = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Change Password</h2>
-      <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+
+      <div className="space-y-4 max-w-md">
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">Current Password</label>
           <div className="relative">
-            <input
+            <input value={password.currentPassword}
+              onChange={(e) => setPassword({ ...password, currentPassword: e.target.value })}
               type={showPassword ? "text" : "password"}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
               required
@@ -470,7 +714,8 @@ const MyAccountPage = () => {
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">New Password</label>
           <div className="relative">
-            <input
+            <input value={password.newPassword}
+              onChange={(e) => setPassword({ ...password, newPassword: e.target.value })}
               type={showNewPassword ? "text" : "password"}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
               required
@@ -487,7 +732,8 @@ const MyAccountPage = () => {
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">Confirm New Password</label>
           <div className="relative">
-            <input
+            <input value={password.confirmPassword}
+              onChange={(e) => setPassword({ ...password, confirmPassword: e.target.value })}
               type={showConfirmPassword ? "text" : "password"}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
               required
@@ -501,14 +747,15 @@ const MyAccountPage = () => {
             </button>
           </div>
         </div>
-        <button
+        <button onClick={updatePassword}
           type="submit"
           className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-2"
         >
           <Lock size={16} />
           Change Password
         </button>
-      </form>
+
+      </div>
     </div>
   );
 
@@ -516,51 +763,51 @@ const MyAccountPage = () => {
 
   const logOutFromAccount = async () => {
     // if (confirm('Are you sure you want to logout?')) {
-      try {
-        const response = await fetch("http://localhost:8080/Edumart-Backend/SignOut", {
-          method: "GET",
-          credentials: "include",
-        });
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SignOut", {
+        method: "GET",
+        credentials: "include",
+      });
 
-        if (response.ok) {
-          const json = await response.json();
-          if (json.status) {
-            window.location.href = "/";
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          window.location.href = "/";
 
 
-          } else {
-            console.log(json.message);
-            toast.error(json.message);
-          }
         } else {
-          console.log("Log out failed. Please try again");
-          toast.error("Log out failed. Please try again");
+          console.log(json.message);
+          toast.error(json.message);
         }
-      } catch (error) {
-        toast.error("Something wrong ! Please try again" + error);
-        console.error("Log out Error:", error);
+      } else {
+        console.log("Log out failed. Please try again");
+        toast.error("Log out failed. Please try again");
       }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again" + error);
+      console.error("Log out Error:", error);
+    }
     // }
   };
 
   //confirmation
 
   const showLogoutConfirm = () => {
-  toast(
-    <ConfirmToast
-      message="Are you sure you want to Log out"
-      onConfirm={logOutFromAccount}
-    />,
-    {
-      position: "top-center",
-      autoClose: false,
-      closeOnClick: false,
-      closeButton: false,
-      toastId: "custom-confirm",
-      style: { width: "340px" },
-    }
-  );
-};
+    toast(
+      <ConfirmToast
+        message="Are you sure you want to Log out"
+        onConfirm={logOutFromAccount}
+      />,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        toastId: "custom-confirm",
+        style: { width: "340px" },
+      }
+    );
+  };
 
   //confirmation
 

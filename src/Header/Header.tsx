@@ -74,8 +74,8 @@ export default function Header() {
 
           {/* <!-- profile/login --> */}
           <div className="w-6/12 flex items-center justify-center">
-            <button type="button"
-              className="relative inline-flex items-center text-sm font-medium text-center text-white">
+            <a href="/home/myaccount"><button type="button"
+              className="relative inline-flex items-center text-sm font-medium text-center text-white cursor-pointer">
 
               <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 mr-1">
                 <title></title>
@@ -85,7 +85,7 @@ export default function Header() {
                   </path>
                 </g>
               </svg>
-            </button>
+            </button></a>
 
             <button type="button"
               className="text-black hover:text-edumartHover font-bold text-xl cursor-pointer">
