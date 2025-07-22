@@ -6,6 +6,19 @@ const classNames = (...classes: (string | boolean | undefined)[]) => {
     return classes.filter(Boolean).join(' ');
 };
 
+type ProductData = {
+    name: string;
+    description: string;
+    brand_id: number | string;
+    stock: number | string;
+    price: number | string;
+    discount: number | string;
+    image: File | null;
+    mainCategory: string;
+    category: string;
+    subCategory: string;
+};
+
 // --- MOCK DATA (Updated based on ER Diagram) ---
 
 let mockMainCategories = [
@@ -25,11 +38,11 @@ let mockBrands = [
 ];
 
 const mockProducts = [
-    { id: 1, name: 'A4 Paper Ream (500 Sheets)', sku: 'SCH-PPR-A4-500', sub_category_id: 1, brand_id: 1, stock: 150, price: 5.99, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=A4+Paper' },
-    { id: 2, name: 'Parker Jotter Ballpoint Pen', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
-    { id: 3, name: 'Ergonomic Office Chair', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
-    { id: 4, name: '12-pack HB Pencils', sku: 'SCH-PEN-STA-HB', sub_category_id: 4, brand_id: 4, stock: 8, price: 4.50, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pencils' },
-    { id: 5, name: 'Canvas Paint Set (24 Colors)', sku: 'ART-PNT-CNV-24', sub_category_id: 7, brand_id: 5, stock: 0, price: 25.00, discount: 5, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Paint+Set' },
+    { id: 1, name: 'A4 Paper Ream (500 Sheets)', description: 'High-quality A4 paper for printing and copying', sku: 'SCH-PPR-A4-500', sub_category_id: 1, brand_id: 1, stock: 150, price: 5.99, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=A4+Paper' },
+    { id: 2, name: 'Parker Jotter Ballpoint Pen', description: 'Classic ballpoint pen with smooth writing experience', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
+    { id: 3, name: 'Ergonomic Office Chair', description: 'Comfortable office chair with ergonomic design', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
+    { id: 4, name: '12-pack HB Pencils', description: 'Standard HB pencils for general use', sku: 'SCH-PEN-STA-HB', sub_category_id: 4, brand_id: 4, stock: 8, price: 4.50, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pencils' },
+    { id: 5, name: 'Canvas Paint Set (24 Colors)', description: 'Comprehensive paint set with 24 vibrant colors', sku: 'ART-PNT-CNV-24', sub_category_id: 7, brand_id: 5, stock: 0, price: 25.00, discount: 5, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Paint+Set' },
 ];
 
 const mockOrders = [{ id: 'ORD-2024-001', customerName: 'John Doe', date: '2024-07-20', total: 49.99, status: 'Shipped' }, { id: 'ORD-2024-002', customerName: 'Jane Smith', date: '2024-07-19', total: 125.50, status: 'Delivered' }, { id: 'ORD-2024-003', customerName: 'Peter Jones', date: '2024-07-19', total: 12.00, status: 'Pending' }, { id: 'ORD-2024-004', customerName: 'Mary Johnson', date: '2024-07-18', total: 250.00, status: 'Cancelled' }];
@@ -241,25 +254,113 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
         return mockSubCategories.filter(sc => sc.category_id === selectedCat);
     }, [selectedCat]);
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            const file = event.target.files[0];
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
+    // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    //     if (event.target.files && event.target.files[0]) {
+    //         const file = event.target.files[0];
+    //         setImagePreview(URL.createObjectURL(file));
+    //     }
+    // };
 
     const handleImageUploadClick = () => {
         fileInputRef.current?.click();
     };
 
+    const displayPrice = () => {
+        const priceNum = parseFloat(String(productData.price));
+        const discountNum = parseFloat(String(productData.discount));
+
+        if (isNaN(priceNum) || isNaN(discountNum)) return '';
+
+        return ((priceNum * 100 / (100 - discountNum))).toFixed(2);
+    };
+
+
+    //add new product function 
+
+    const [productData, setProductData] = useState<ProductData>({
+        name: product?.name || '',
+        description: product?.description || '',
+        brand_id: product?.brand_id || 0,
+        stock: product?.stock || 0,
+        price: product?.price || 0,
+        discount: product?.discount || 0,
+        image: null,
+        mainCategory: '',
+        category: '',
+        subCategory: ''
+    });
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setProductData(prev => ({ ...prev, image: file }));
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+
+    const saveProduct = async () => {
+        console.log(productData);
+
+        // You can now send productData in fetch / axios
+        const formData = new FormData();
+        Object.entries(productData).forEach(([key, value]) => {
+            if (value !== null) formData.append(key, value as any);
+        });
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/SaveProduct", {
+                method: "POST",
+                credentials: "include",
+                body: formData
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+
+
+                    console.log(json);
+
+                    console.log("New Product added successfully");
+                    toast.success("New Product added successfully");
+                    // setView('products/list');
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("New Product add failed. Please try again");
+                toast.error("New Product add failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Internal Server Error. Please try again later");
+            console.error("New Product add Error:", error);
+        }
+    };
+
+    //add new product function 
+
     return (
         <Card>
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{isEditMode ? 'Edit Product' : 'Add New Product'}</h2>
-            <form onSubmit={(e) => { e.preventDefault(); setView('products/list'); }}>
+            <form onSubmit={(e) => { e.preventDefault(); }}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2 space-y-6">
-                        <div><label className="block text-gray-700 font-medium mb-2">Product Name</label><input type="text" defaultValue={product?.name} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" /></div>
-                        <div><label className="block text-gray-700 font-medium mb-2">Description</label><textarea rows={5} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Detailed product description..."></textarea></div>
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Product Name</label>
+                            <input type="text"
+                                value={productData.name}
+                                onChange={(e) => setProductData({ ...productData, name: e.target.value })}
+                                defaultValue={product?.name} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Description</label>
+                            <textarea rows={5}
+                                value={productData.description}
+                                onChange={(e) => setProductData({ ...productData, description: e.target.value })}
+                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Detailed product description..."></textarea>
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <label className="block text-gray-700 font-medium">Product Image</label>
@@ -295,7 +396,10 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
                         </select>
                     </div>
                     <div><label className="block text-gray-700 font-medium mb-2">Sub Category</label>
-                        <select disabled={!selectedCat} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100">
+                        <select disabled={!selectedCat}
+                            value={productData.subCategory}
+                            onChange={(e) => setProductData({ ...productData, subCategory: e.target.value })}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100">
                             <option>Select Sub Category</option>
                             {availableSubCats.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
                         </select>
@@ -305,19 +409,47 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
                 <h3 className="text-lg font-semibold text-gray-700 mt-8 mb-4 border-b pb-2">Details, Pricing & Stock</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><label className="block text-gray-700 font-medium mb-2">Brand</label>
-                        <select defaultValue={product?.brand_id} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option value={0}>Select Brand</option>{mockBrands.map(b =>
-                            <option key={b.id} value={b.id}>{b.name}</option>)}
+                        <select
+                            value={productData.brand_id}
+                            onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })}
+                            defaultValue={product?.brand_id} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value={0}>Select Brand</option>
+                            {mockBrands.map(b =>
+                                <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                     </div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Stock Quantity</label><input type="number" min="0" defaultValue={product?.stock} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Stock Quantity</label>
+                        <input type="number"
+                            value={productData.stock}
+                            onChange={(e) => setProductData({ ...productData, stock: e.target.value })}
+                            min="0" defaultValue={product?.stock}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Price (LKR)</label><input type="number" min="0" step="0.01" defaultValue={product?.price} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Discount (%)</label><input type="number" min="0" max="100" defaultValue={product?.discount} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label><input type="number" min="0" step="0.01" defaultValue={product?.price} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled /></div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Price (LKR)</label>
+                        <input type="number" value={productData.price}
+                            onChange={(e) => setProductData({ ...productData, price: e.target.value })}
+                            min="0" step="0.01" defaultValue={product?.price}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Discount (%)</label>
+                        <input type="number"
+                            value={productData.discount}
+                            onChange={(e) => setProductData({ ...productData, discount: e.target.value })}
+                            min="0" max="100" defaultValue={product?.discount}
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label>
+                        <input type="number" min="0" step="0.01" value={displayPrice()} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled />
+                    </div>
                 </div>
 
-                <div className="mt-8 flex justify-end gap-4"><Button type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button><Button type="submit">{isEditMode ? 'Update Product' : 'Save Product'}</Button></div>
+                <div className="mt-8 flex justify-end gap-4"><Button className='cursor-pointer' type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button><Button className='cursor-pointer' onClick={saveProduct} type="submit">{isEditMode ? 'Update Product' : 'Save Product'}</Button></div>
             </form>
         </Card>
     );
@@ -442,7 +574,6 @@ const AdminDashboard: FC = () => {
             if (response.ok) {
                 const json = await response.json();
 
-                console.log("Product Data received:", json);
                 mockBrands = json.brandList || [];
                 mockMainCategories = json.mainCategoryList || [];
                 mockCategories = json.categoryList.map((cat: { id: number; name: string; mainCategory: { id: number } }) => ({
@@ -451,7 +582,7 @@ const AdminDashboard: FC = () => {
                     main_category_id: cat.mainCategory?.id || null,
                 }));
 
-                mockSubCategories = json.subCategoryList.map((subCat: {id: number; name: string; category: { id: number }; }) => ({
+                mockSubCategories = json.subCategoryList.map((subCat: { id: number; name: string; category: { id: number }; }) => ({
                     id: subCat.id,
                     name: subCat.name,
                     category_id: subCat.category?.id ?? null,

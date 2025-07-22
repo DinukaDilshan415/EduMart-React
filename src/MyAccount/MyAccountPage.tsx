@@ -118,7 +118,6 @@ const MyAccountPage = () => {
       if (response.ok) {
         const json = await response.json();
 
-        console.log("City data received:", json);
         setCities(json); // Store city data in state
 
       } else {

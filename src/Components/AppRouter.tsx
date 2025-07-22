@@ -5,6 +5,7 @@ import VerifyAccount from "../EmailVerification/VerifyAccount";
 import MyAccount from "../MyAccount/MyAccount";
 import AdminDashboard from "../Admin/AdminDashboard";
 import ProductViewPage from "../Product/ProductViewPage";
+import ProductPage from "../Product/ProductPage";
 
 
 const router = createBrowserRouter([
@@ -30,8 +31,9 @@ const router = createBrowserRouter([
   },
     {
     path: "/singleproduct",
-    Component: ProductViewPage
+    Component: ProductPage
   },
+  
 ]);
 
 const AppRouter = () => {
