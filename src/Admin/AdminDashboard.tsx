@@ -629,7 +629,38 @@ const ManageCategories: FC<{ setView: SetViewFn }> = () => {
 };
 
 const ManageBrands: FC<{ setView: SetViewFn }> = ({ setView }) => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="md:col-span-2"><Card><h2 className="text-2xl font-bold text-gray-800 mb-6">Product Brands</h2><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Brand Name</th><th className="p-3 font-semibold text-center">Products</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{brand.name}</td><td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td><td className="p-3"><div className="flex justify-center items-center space-x-2"><button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td></tr>))}</tbody></table></Card></div><div><Card><h3 className="text-xl font-bold text-gray-800 mb-4">Add New Brand</h3><form className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Brand Name</label><input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" /></div><div><Button className="w-full">Add Brand</Button></div></form></Card></div></div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="md:col-span-2">
+        <Card>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Product Brands</h2>
+            <table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm">
+                <th className="p-3 font-semibold">Brand Name</th><th className="p-3 font-semibold text-center">Products</th>
+                <th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-medium text-gray-800">{brand.name}</td>
+                    <td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td>
+                    <td className="p-3">
+                        <div className="flex justify-center items-center space-x-2">
+                            <button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button>
+                            <button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button>
+                        </div>
+                    </td>
+                </tr>))}</tbody>
+            </table>
+        </Card>
+    </div>
+        <div>
+            <Card>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Add New Brand</h3>
+                <form className="space-y-4">
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Brand Name</label>
+                        <input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" />
+                    </div>
+                    <div><Button className="w-full">Add Brand</Button>
+                    </div>
+                </form>
+            </Card>
+        </div>
+    </div>
 );
 
 const OrdersPage: FC = () => {

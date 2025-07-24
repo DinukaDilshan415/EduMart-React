@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 // --- Type Definitions for TypeScript ---
 
@@ -8,22 +9,36 @@ interface IconProps {
 }
 
 interface Product {
-    id: number;
-    name: string;
-    price: string;
-    oldPrice: string;
-    img: string;
+  id: number;
+  name: string;
+  price: string;
+  oldPrice: string;
+  img: string;
 }
+
+interface ProductData {
+  mainCategory: string;
+  category: string;
+  subCategory: string;
+  brand: string;
+  title: string;
+  description: string;
+  price: number;
+  discount: number;
+  imagePath: string;
+}
+
 
 type Tab = 'description' | 'reviews';
 
 interface ProductTabsProps {
-    activeTab: Tab;
-    setActiveTab: React.Dispatch<React.SetStateAction<Tab>>;
+  activeTab: Tab;
+  setActiveTab: React.Dispatch<React.SetStateAction<Tab>>;
+  product: ProductData;
 }
 
 interface ProductCardProps {
-    product: Product;
+  product: Product;
 }
 
 
@@ -84,85 +99,85 @@ const promoImageUrl = "https://i.imgur.com/eBw1M5I.png";
 const mintpayLogoUrl = "https://static.mintpay.lk/img/logo/mintpay-logo.svg";
 
 const relatedProductsData: Product[] = [
-    { id: 1, name: "Dalada Siritha", price: "216.00", oldPrice: "270.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+1" },
-    { id: 2, name: "Children's Colouring Book", price: "1,260.00", oldPrice: "1,575.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+2" },
-    { id: 3, name: "Everyday Pictures", price: "180.00", oldPrice: "225.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+3" },
-    { id: 4, name: "Rathna B5 Square Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+4" },
-    { id: 5, name: "Rathna B5 Single Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+5" },
-    { id: 6, name: "Purana Sanna Sahitha", price: "560.00", oldPrice: "700.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+6" },
+  { id: 1, name: "Dalada Siritha", price: "216.00", oldPrice: "270.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+1" },
+  { id: 2, name: "Children's Colouring Book", price: "1,260.00", oldPrice: "1,575.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+2" },
+  { id: 3, name: "Everyday Pictures", price: "180.00", oldPrice: "225.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+3" },
+  { id: 4, name: "Rathna B5 Square Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+4" },
+  { id: 5, name: "Rathna B5 Single Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+5" },
+  { id: 6, name: "Purana Sanna Sahitha", price: "560.00", oldPrice: "700.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+6" },
 ];
 
 
 // --- Sub-components ---
 
-const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab }) => (
-    <div className="w-full mt-12">
-        <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                <button
-                    onClick={() => setActiveTab('description')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'description' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                >
-                    Description
-                </button>
-                <button
-                    onClick={() => setActiveTab('reviews')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'reviews' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-                >
-                    Reviews (1)
-                </button>
-            </nav>
-        </div>
-        <div className="py-6 text-gray-600">
-            {activeTab === 'description' && (
-                <p>
-                    Introducing the School Scissors 133mm by ProMate, a top choice for students and educators. Precision-engineered for durability, these scissors excel in school projects and crafts. Built tough for everyday use, they can elevate your stationery with these essentials, balancing safety and efficiency to ensure seamless cuts and limitless creativity. Order the School Scissors 133mm online for unmatched performance in all your cutting endeavors.
-                </p>
-            )}
-            {activeTab === 'reviews' && (
-                <div>
-                    <h3 className="font-semibold text-lg mb-2">1 review for ProMate Photocopy Paper</h3>
-                    <div className="flex items-start space-x-4">
-                        <div className="flex items-center text-yellow-400">
-                            {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
-                        </div>
-                        <p><span className="font-bold">Admin</span> – July 22, 2025</p>
-                    </div>
-                    <p className="mt-2">This is a sample review.</p>
-                </div>
-            )}
-        </div>
+const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, product }) => (
+  <div className="w-full mt-12">
+    <div className="border-b border-gray-200">
+      <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+        <button
+          onClick={() => setActiveTab('description')}
+          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'description' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          Description
+        </button>
+        <button
+          onClick={() => setActiveTab('reviews')}
+          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'reviews' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+        >
+          Reviews (1)
+        </button>
+      </nav>
     </div>
+    <div className="py-6 text-gray-600">
+      {activeTab === 'description' && (
+        <p>
+          {product.description}
+        </p>
+      )}
+      {activeTab === 'reviews' && (
+        <div>
+          <h3 className="font-semibold text-lg mb-2">1 review for ProMate Photocopy Paper</h3>
+          <div className="flex items-start space-x-4">
+            <div className="flex items-center text-yellow-400">
+              {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
+            </div>
+            <p><span className="font-bold">Admin</span> – July 22, 2025</p>
+          </div>
+          <p className="mt-2">This is a sample review.</p>
+        </div>
+      )}
+    </div>
+  </div>
 );
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
-    <div className="border rounded-lg p-4 text-center group">
-        <div className="relative">
-            <img src={product.img} alt={product.name} className="mx-auto h-48 object-contain mb-4"/>
-            <span className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</span>
-        </div>
-        <h4 className="font-semibold text-gray-700 h-12">{product.name}</h4>
-        <div className="flex justify-center items-baseline space-x-2 mt-2">
-            <p className="text-red-600 font-bold">LKR {product.price}</p>
-            <p className="text-gray-400 line-through text-sm">LKR {product.oldPrice}</p>
-        </div>
-        <div className="text-xs text-gray-500 mt-1">
-            <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3</span>
-            <span className="mx-1">with</span>
-            <img src={mintpayLogoUrl} alt="mintpay" className="h-3 inline-block" />
-        </div>
+  <div className="border rounded-lg p-4 text-center group">
+    <div className="relative">
+      <img src={product.img} alt={product.name} className="mx-auto h-48 object-contain mb-4" />
+      <span className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</span>
     </div>
+    <h4 className="font-semibold text-gray-700 h-12">{product.name}</h4>
+    <div className="flex justify-center items-baseline space-x-2 mt-2">
+      <p className="text-red-600 font-bold">LKR {product.price}</p>
+      <p className="text-gray-400 line-through text-sm">LKR {product.oldPrice}</p>
+    </div>
+    <div className="text-xs text-gray-500 mt-1">
+      <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3</span>
+      <span className="mx-1">with</span>
+      <img src={mintpayLogoUrl} alt="mintpay" className="h-3 inline-block" />
+    </div>
+  </div>
 );
 
 const RelatedProducts: React.FC = () => (
-    <div className="w-full mt-12">
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">Related products</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {relatedProductsData.map(product => (
-                <ProductCard key={product.id} product={product} />
-            ))}
-        </div>
+  <div className="w-full mt-12">
+    <h3 className="text-2xl font-bold text-gray-800 mb-6">Related products</h3>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      {relatedProductsData.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
+  </div>
 );
 
 
@@ -181,6 +196,84 @@ const ProductPage: React.FC = () => {
     setQuantity(prevQuantity => (prevQuantity > 1 ? prevQuantity - 1 : 1));
   };
 
+  useEffect(() => {
+    loadProductData();
+  }, []);
+
+  const [product, setProduct] = useState<ProductData>({
+    mainCategory: '',
+    category: '',
+    subCategory: '',
+    brand: '',
+    title: '',
+    description: '',
+    price: 0,
+    discount: 0,
+    imagePath: 'https://placehold.co/400x400/e0e0e0/757575?text=Image+Not+Found'
+  });
+
+
+  //load product data from backend
+
+  const loadProductData = async () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const id = searchParams.get('id');
+
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadSingleProduct?id=${id}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          setProduct({
+            mainCategory: json.product.subCategory.category.mainCategory.name,
+            category: json.product.subCategory.category.name,
+            subCategory: json.product.subCategory.name,
+            brand: json.product.brand.name,
+            title: json.product.title,
+            description: json.product.description,
+            price: json.stock.price,
+            discount: json.product.discount,
+            imagePath: `http://localhost:8080/Edumart-Backend/product-images/${json.product.id}/image1.png`
+          });
+          console.log("LoadSingleProduct successfully");
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("LoadSingleProduct failed. Please try again");
+        toast.error("LoadSingleProduct failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("LoadSingleProduct Error:", error);
+    }
+  };
+
+  const formattedPrice1 = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(product.price);
+
+  const displayPrice = () => {
+    const priceNum = parseFloat(String(product.price));
+    const discountNum = parseFloat(String(product.discount));
+
+    if (isNaN(priceNum) || isNaN(discountNum)) return '';
+
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(((priceNum * 100 / (100 - discountNum))).toFixed(2)));
+
+  };
+
+  //load product data from backend
+
   return (
     <div className="font-sans bg-white text-gray-800">
       <div className="container mx-auto p-4 lg:p-8">
@@ -188,69 +281,70 @@ const ProductPage: React.FC = () => {
         <nav className="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
           <a href="#" className="hover:text-green-600 transition-colors">Home</a> /
           <a href="#" className="hover:text-green-600 transition-colors"> Products</a> /
-          <a href="#" className="hover:text-green-600 transition-colors"> Printing and Copy Papers</a> /
-          <span className="text-gray-700"> ProMate Photocopy Paper A4 80GSM Box...</span>
+          <a href="#" className="hover:text-green-600 transition-colors"> {product.mainCategory}</a> /
+          <a href="#" className="hover:text-green-600 transition-colors"> {product.category}</a> /
+          <span className="text-gray-700"> {product.subCategory}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-8 gap-y-8">
-          
+
           {/* --- LEFT COLUMN: PRODUCT IMAGES & SOCIAL SHARE --- */}
           <div className="lg:col-span-5">
             <div className="flex flex-col-reverse md:flex-row gap-4">
-                <div className="flex-shrink-0 md:w-24 flex md:flex-col items-center justify-start gap-3">
-                    <div className="w-20 h-20 border-2 border-green-500 rounded-md p-1 cursor-pointer">
-                        <img 
-                            src={productImageUrl} 
-                            alt="ProMate Paper Thumbnail" 
-                            className="w-full h-full object-contain" 
-                            onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src='https://placehold.co/80x80/e0e0e0/757575?text=Img'; }}
-                        />
-                    </div>
+              <div className="flex-shrink-0 md:w-24 flex md:flex-col items-center justify-start gap-3">
+                <div className="w-20 h-20 border-2 border-green-500 rounded-md p-1 cursor-pointer">
+                  <img
+                    src={product.imagePath}
+                    alt="Thumbnail"
+                    className="w-full h-full object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src = 'https://placehold.co/80x80/e0e0e0/757575?text=Img'; }}
+                  />
                 </div>
-                <div className="flex-1 border rounded-lg p-4 flex items-center justify-center h-[350px] md:h-[450px]">
-                    <img 
-                        src={productImageUrl} 
-                        alt="ProMate Paper Box" 
-                        className="max-w-full max-h-full object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src='https://placehold.co/400x400/e0e0e0/757575?text=Image+Not+Found'; }}
-                    />
-                </div>
+              </div>
+              <div className="flex-1 border rounded-lg p-4 flex items-center justify-center h-[350px] md:h-[450px]">
+                <img
+                  src={product.imagePath}
+                  alt="Thumbnail"
+                  className="max-w-full max-h-full object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/e0e0e0/757575?text=Image+Not+Found'; }}
+                />
+              </div>
             </div>
-             <div className="mt-6 flex items-center justify-center md:justify-start space-x-4">
-                <span className="text-sm font-medium text-gray-600">Share:</span>
-                <a href="#" aria-label="Share on Facebook" className="text-gray-400 hover:text-blue-600 transition-colors"><FacebookIcon /></a>
-                <a href="#" aria-label="Share on Twitter" className="text-gray-400 hover:text-sky-500 transition-colors"><TwitterIcon /></a>
-                <a href="#" aria-label="Share on LinkedIn" className="text-gray-400 hover:text-blue-700 transition-colors"><LinkedInIcon /></a>
+            <div className="mt-6 flex items-center justify-center md:justify-start space-x-4">
+              <span className="text-sm font-medium text-gray-600">Share:</span>
+              <a href="#" aria-label="Share on Facebook" className="text-gray-400 hover:text-blue-600 transition-colors"><FacebookIcon /></a>
+              <a href="#" aria-label="Share on Twitter" className="text-gray-400 hover:text-sky-500 transition-colors"><TwitterIcon /></a>
+              <a href="#" aria-label="Share on LinkedIn" className="text-gray-400 hover:text-blue-700 transition-colors"><LinkedInIcon /></a>
             </div>
           </div>
 
           {/* --- MIDDLE COLUMN: PRODUCT DETAILS --- */}
           <div className="lg:col-span-4">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              ProMate Photocopy Paper A4 80GSM Box | 2,500 Sheets [ 500 X 5 Packs ]
+              {product.title}
             </h1>
             <div className="flex flex-wrap items-center text-sm text-gray-600 mb-4 gap-x-4 gap-y-2">
-              <span>Brand: <a href="#" className="text-green-600 font-semibold hover:underline">ProMate</a></span>
+              <span>Brand: <a href="#" className="text-green-600 font-semibold hover:underline">{product.brand}</a></span>
               <div className="flex items-center">
                 <div className="flex items-center text-yellow-400">
-                    {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
+                  {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
                 </div>
                 <a href="#" className="ml-2 hover:underline">(5 reviews)</a>
               </div>
             </div>
             <hr className="my-4" />
             <div>
-              <span className="text-gray-500 line-through text-lg">MRP 19,500.00</span>
+              <span className="text-gray-500 line-through text-lg">MRP {displayPrice()}</span>
               <div className="flex items-baseline space-x-3 mt-1">
-                <span className="text-4xl font-bold text-red-600">LKR 7,600.00</span>
-                <span className="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full">-61% OFF</span>
+                <span className="text-4xl font-bold text-red-600">LKR {formattedPrice1}</span>
+                <span className="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full">-{product.discount}% OFF</span>
               </div>
             </div>
-            <div className="flex items-center bg-gray-50 p-3 rounded-lg my-5 border">
+            {/* <div className="flex items-center bg-gray-50 p-3 rounded-lg my-5 border">
               <span className="font-semibold">LKR 2,533.33 X 3</span>
               <span className="text-gray-500 mx-2">with</span>
               <img src={mintpayLogoUrl} alt="mintpay" className="h-4" />
-            </div>
+            </div> */}
             <div className="flex items-center my-6">
               <label htmlFor="quantity" className="font-semibold mr-4 text-gray-800">Quantity</label>
               <div className="flex border rounded-md overflow-hidden">
@@ -265,11 +359,11 @@ const ProductPage: React.FC = () => {
             </div>
             <hr className="my-6" />
             <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>SKU:</strong> PSTD0003_BOX</p>
               <div>
-                <strong>Categories:</strong> 
-                <a href="#" className="text-green-600 hover:underline ml-1">Printing and Copy Papers</a>, 
-                <a href="#" className="text-green-600 hover:underline ml-1">Photocopy Papers</a>
+                <strong>Categories:</strong>
+                <a href="#" className="text-green-600 hover:underline ml-1">{product.mainCategory}</a> /
+                <a href="#" className="text-green-600 hover:underline ml-1">{product.category}</a> /
+                <a href="#" className="text-green-600 hover:underline ml-1">{product.subCategory}</a>
               </div>
             </div>
           </div>
@@ -283,11 +377,11 @@ const ProductPage: React.FC = () => {
               <div className="flex items-center"><MoneyBillWaveIcon className="text-gray-500 mr-4 flex-shrink-0" /> Pay online or when receiving goods</div>
             </div>
             <div className="mt-8">
-              <img 
-                src={promoImageUrl} 
-                alt="Stationery Promotion" 
-                className="w-full rounded-lg shadow-md" 
-                onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src='https://placehold.co/300x400/e0e0e0/757575?text=Promo'; }}
+              <img
+                src={promoImageUrl}
+                alt="Stationery Promotion"
+                className="w-full rounded-lg shadow-md"
+                onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src = 'https://placehold.co/300x400/e0e0e0/757575?text=Promo'; }}
               />
             </div>
           </div>
@@ -295,8 +389,8 @@ const ProductPage: React.FC = () => {
 
         {/* --- TABS & RELATED PRODUCTS SECTION --- */}
         <div className="mt-8">
-            <ProductTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-            <RelatedProducts />
+          <ProductTabs activeTab={activeTab} setActiveTab={setActiveTab} product={product} />
+          <RelatedProducts />
         </div>
 
       </div>
