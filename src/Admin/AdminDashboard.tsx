@@ -1,5 +1,10 @@
 import { useState, FC, ReactNode, useMemo, useRef, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 // Helper function to conditionally apply class names
 const classNames = (...classes: (string | boolean | undefined)[]) => {
@@ -293,15 +298,16 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setProductData(prev => ({ ...prev, image: file }));
+            setProductData(prev => ({
+                ...prev,
+                image: file // <-- set the image file here
+            }));
             setImagePreview(URL.createObjectURL(file));
         }
     };
 
 
     const saveProduct = async () => {
-        console.log(productData);
-
         // You can now send productData in fetch / axios
         const formData = new FormData();
         Object.entries(productData).forEach(([key, value]) => {
@@ -319,12 +325,9 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
                 const json = await response.json();
                 if (json.status) {
 
-
-                    console.log(json);
-
                     console.log("New Product added successfully");
                     toast.success("New Product added successfully");
-                    // setView('products/list');
+                    setView('products/list');
                 } else {
                     console.log(json.message);
                     toast.error(json.message);
@@ -340,6 +343,111 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
     };
 
     //add new product function 
+
+    //Update product function 
+
+    const updateProduct = async () => {
+        // You can now send productData in fetch / axios
+        const formData = new FormData();
+        Object.entries(productData).forEach(([key, value]) => {
+            if (value !== null) formData.append(key, value as any);
+        });
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/StockUpdate", {
+                method: "POST",
+                credentials: "include",
+                body: formData
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+
+                    console.log("Product Stock Updated successfully");
+                    toast.success("Product Stock Updated successfully");
+                    setView('products/list');
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("Product Stock Update failed. Please try again");
+                toast.error("Product Stock Update failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Internal Server Error. Please try again later");
+            console.error("Product Stock Updat Error:", error);
+        }
+    };
+
+    //Update product function 
+
+    //Stock check function 
+
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleProductSave = () => {
+        setOpen(false);
+        saveProduct();
+    };
+
+    const handlProductUpdate = () => {
+        setOpen(false);
+        updateProduct();
+    };
+
+    const checkProductStock = async () => {
+        console.log(productData);
+
+        // You can now send productData in fetch / axios
+        const formData = new FormData();
+        Object.entries(productData).forEach(([key, value]) => {
+            if (value !== null) formData.append(key, value as any);
+        });
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/StockCheck", {
+                method: "POST",
+                credentials: "include",
+                body: formData
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+
+                    if (json.message == "UpdateProduct") {
+                        console.log("UpdateProduct");
+                        handleClickOpen();
+                    } else if (json.message == "InsertProduct") {
+                        console.log("InsertProduct");
+                        saveProduct();
+                    }
+
+                } else {
+                    console.log(json);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("Stock check failed. Please try again");
+                toast.error("Stock check failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Internal Server Error. Please try again later");
+            console.error("Stock check Error:", error);
+        }
+    };
+
+    //Stock check function
 
     return (
         <Card>
@@ -449,7 +557,32 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
                     </div>
                 </div>
 
-                <div className="mt-8 flex justify-end gap-4"><Button className='cursor-pointer' type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button><Button className='cursor-pointer' onClick={saveProduct} type="submit">{isEditMode ? 'Update Product' : 'Save Product'}</Button></div>
+                <div className="mt-8 flex justify-end gap-4">
+                    <Button className='cursor-pointer' type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button>
+                    <Button className='cursor-pointer' onClick={checkProductStock} type="submit">{isEditMode ? 'Update Product' : 'Save Product'}</Button>
+                </div>
+                <Dialog
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        {"Product Already Exists!"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Product with the same name, brand, sub-category and Same Price already exists.
+                            Do you want to update the existing product stock or add a new one?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button className='cursor-pointer' onClick={handleProductSave}>Add As New One</Button>
+                        <Button className='cursor-pointer' onClick={handlProductUpdate} variant="primary">
+                            Update Existing Stock
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </form>
         </Card>
     );
