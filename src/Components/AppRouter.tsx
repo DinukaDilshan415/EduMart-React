@@ -4,17 +4,17 @@ import Home from "../Home/Home";
 import VerifyAccount from "../EmailVerification/VerifyAccount";
 import MyAccount from "../MyAccount/MyAccount";
 import AdminDashboard from "../Admin/AdminDashboard";
-import ProductViewPage from "../Product/ProductViewPage";
-import ProductPage from "../Product/ProductPage";
+import SingleProductView from "../Product/SingleProductView";
+import Cart from "../Cart/Cart";
 
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/login",
     Component: Login
   },
   {
-    path: "/home",
+    path: "/",
     Component: Home
   },
   {
@@ -31,8 +31,12 @@ const router = createBrowserRouter([
   },
     {
     path: "/singleproduct",
-    Component: ProductPage
+    Component: SingleProductView
   },
+  {
+    path: "/product/cart",
+    Component: Cart
+  }
   
 ]);
 

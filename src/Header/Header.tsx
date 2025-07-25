@@ -89,7 +89,7 @@ export default function Header() {
 
             <button type="button"
               className="text-black hover:text-edumartHover font-bold text-xl cursor-pointer">
-              Login
+              <a href="/login">Login</a>
             </button>
 
           </div>

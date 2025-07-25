@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 // --- Type Definitions for TypeScript ---
@@ -8,14 +8,18 @@ interface IconProps {
   size?: number;
 }
 
+// Updated Product interface for related products
 interface Product {
   id: number;
   name: string;
   price: string;
   oldPrice: string;
   img: string;
+  // rating: number;
+  // reviewCount: number;
 }
 
+// Interface for the main product data from the backend
 interface ProductData {
   mainCategory: string;
   category: string;
@@ -92,21 +96,30 @@ const MoneyBillWaveIcon: React.FC<IconProps> = ({ className, size = 24 }) => (
   </svg>
 );
 
+const ShoppingCartIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="21" r="1"></circle>
+    <circle cx="20" cy="21" r="1"></circle>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+  </svg>
+);
+
+const ChevronLeftIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+  </svg>
+);
+
+const ChevronRightIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+  </svg>
+);
+
 
 // --- Placeholder Data & URLs ---
-const productImageUrl = "https://i.imgur.com/S6S1t2s.png";
 const promoImageUrl = "https://i.imgur.com/eBw1M5I.png";
-const mintpayLogoUrl = "https://static.mintpay.lk/img/logo/mintpay-logo.svg";
-
-const relatedProductsData: Product[] = [
-  { id: 1, name: "Dalada Siritha", price: "216.00", oldPrice: "270.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+1" },
-  { id: 2, name: "Children's Colouring Book", price: "1,260.00", oldPrice: "1,575.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+2" },
-  { id: 3, name: "Everyday Pictures", price: "180.00", oldPrice: "225.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+3" },
-  { id: 4, name: "Rathna B5 Square Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+4" },
-  { id: 5, name: "Rathna B5 Single Ruled", price: "272.00", oldPrice: "340.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+5" },
-  { id: 6, name: "Purana Sanna Sahitha", price: "560.00", oldPrice: "700.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+6" },
-];
-
+const kokopayLogoUrl = "https://www.adahorana.lk/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo-koko.c2b21c17.png&w=1200&q=75";
 
 // --- Sub-components ---
 
@@ -116,13 +129,13 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
       <nav className="-mb-px flex space-x-8" aria-label="Tabs">
         <button
           onClick={() => setActiveTab('description')}
-          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'description' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg cursor-pointer ${activeTab === 'description' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 cursor-pointer'}`}
         >
           Description
         </button>
         <button
           onClick={() => setActiveTab('reviews')}
-          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg ${activeTab === 'reviews' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg cursor-pointer ${activeTab === 'reviews' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 cursor-pointer'}`}
         >
           Reviews (1)
         </button>
@@ -136,12 +149,12 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
       )}
       {activeTab === 'reviews' && (
         <div>
-          <h3 className="font-semibold text-lg mb-2">1 review for ProMate Photocopy Paper</h3>
+          <h3 className="font-semibold text-lg mb-2">1 review for {product.title}</h3>
           <div className="flex items-start space-x-4">
             <div className="flex items-center text-yellow-400">
               {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
             </div>
-            <p><span className="font-bold">Admin</span> – July 22, 2025</p>
+            <p><span className="font-bold">Admin</span> – July 25, 2025</p>
           </div>
           <p className="mt-2">This is a sample review.</p>
         </div>
@@ -151,54 +164,126 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
 );
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
-  <div className="border rounded-lg p-4 text-center group">
-    <div className="relative">
-      <img src={product.img} alt={product.name} className="mx-auto h-48 object-contain mb-4" />
-      <span className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</span>
+  <div className="flex-shrink-0 w-52 text-left group p-2 rounded-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-2">
+    <div className="relative overflow-hidden rounded-lg border">
+      <div className="aspect-w-1 aspect-h-1 w-full bg-gray-100">
+        <img
+          src={product.img}
+          alt={product.name}
+          className="w-full h-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+      <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</div>
+      <button className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
+        <ShoppingCartIcon className="w-5 h-5" />
+      </button>
     </div>
-    <h4 className="font-semibold text-gray-700 h-12">{product.name}</h4>
-    <div className="flex justify-center items-baseline space-x-2 mt-2">
-      <p className="text-red-600 font-bold">LKR {product.price}</p>
-      <p className="text-gray-400 line-through text-sm">LKR {product.oldPrice}</p>
+    <h4 className="font-medium text-gray-800 mt-3 text-base h-10">{product.name}</h4>
+    <div className="flex items-baseline space-x-2 mt-2">
+      <p className="text-red-600 text-lg font-bold">LKR {product.price}</p>
+      <p className="text-gray-500 line-through text-sm">LKR {product.oldPrice}</p>
     </div>
     <div className="text-xs text-gray-500 mt-1">
-      <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3</span>
-      <span className="mx-1">with</span>
-      <img src={mintpayLogoUrl} alt="mintpay" className="h-3 inline-block" />
+      <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3 with </span>
+      <img src={kokopayLogoUrl} alt="mintpay" className="h-3 inline-block" />
     </div>
+    {/* <div className="flex items-center mt-1">
+            <div className="flex text-yellow-400">
+                {[...Array(product.rating)].map((_, i) => <StarIcon key={i} className="w-4 h-4" />)}
+                {[...Array(5 - product.rating)].map((_, i) => <StarIcon key={i} className="w-4 h-4 text-gray-300" />)}
+            </div>
+            <span className="text-xs text-gray-500 ml-1">({product.reviewCount})</span>
+        </div> */}
   </div>
 );
 
-const RelatedProducts: React.FC = () => (
-  <div className="w-full mt-12">
-    <h3 className="text-2xl font-bold text-gray-800 mb-6">Related products</h3>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-      {relatedProductsData.map(product => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+const RelatedProducts: React.FC = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+    scrollRef.current.style.cursor = 'grabbing';
+  };
+
+  const handleMouseLeave = () => {
+    if (!scrollRef.current) return;
+    setIsDragging(false);
+    scrollRef.current.style.cursor = 'grab';
+  };
+
+  const handleMouseUp = () => {
+    if (!scrollRef.current) return;
+    setIsDragging(false);
+    scrollRef.current.style.cursor = 'grab';
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Multiplier for faster scrolling
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="w-full mt-12">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6">Related products</h3>
+      <div className="relative">
+        <button onClick={() => scroll('left')} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-all hidden md:block">
+          <ChevronLeftIcon className="w-6 h-6 text-gray-600" />
+        </button>
+        <div
+          ref={scrollRef}
+          className="flex space-x-10 overflow-x-auto pb-4 scrollbar-hide cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+        >
+          {relatedProductsData.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        <button onClick={() => scroll('right')} className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-all hidden md:block">
+          <ChevronRightIcon className="w-6 h-6 text-gray-600" />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 /**
  * A responsive single product view component with functional quantity and tabs.
  */
+
+let relatedProductsData: Product[] = [
+  { id: 1, name: "ProMate A7 Flip-up Spiral Pad 100Pgs", price: "112.00", oldPrice: "140.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Pad+1" },
+  // { id: 2, name: "ProMate A5 Thinkbook Royaux 200Pgs", price: "1,720.00", oldPrice: "2,150.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Book+2", rating: 5, reviewCount: 2 },
+  // { id: 3, name: "ProMate A6 Flip-up Spiral Pad 50Pgs", price: "144.00", oldPrice: "180.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Pad+2", rating: 5, reviewCount: 1 },
+  // { id: 4, name: "ProMate A4 Hardcover Flip-on Spiral Pad 100Pgs", price: "880.00", oldPrice: "1,100.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Pad+3", rating: 5, reviewCount: 2 },
+  // { id: 5, name: "ProMate B5 Flip-on Spiral Pad 100Pgs", price: "560.00", oldPrice: "700.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Pad+4", rating: 5, reviewCount: 1 },
+  // { id: 6, name: "ProMate 180mmx90mm Notebook 100Pgs", price: "116.00", oldPrice: "145.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Notebook", rating: 5, reviewCount: 1 },
+  // { id: 7, name: "ProMate 120mmx76mm Pocket Notebook 100Pgs", price: "76.00", oldPrice: "95.00", img: "https://placehold.co/220x220/f0f0f0/333?text=Pocket+Book", rating: 5, reviewCount: 1 },
+];
+
 const ProductPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<Tab>('description');
-
-  const handleIncrease = () => {
-    setQuantity(prevQuantity => prevQuantity + 1);
-  };
-
-  const handleDecrease = () => {
-    setQuantity(prevQuantity => (prevQuantity > 1 ? prevQuantity - 1 : 1));
-  };
-
-  useEffect(() => {
-    loadProductData();
-  }, []);
 
   const [product, setProduct] = useState<ProductData>({
     mainCategory: '',
@@ -209,49 +294,72 @@ const ProductPage: React.FC = () => {
     description: '',
     price: 0,
     discount: 0,
-    imagePath: 'https://placehold.co/400x400/e0e0e0/757575?text=Image+Not+Found'
+    imagePath: 'https://placehold.co/400x400/e0e0e0/757575?text=Loading...'
   });
 
-
-  //load product data from backend
-
-  const loadProductData = async () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const id = searchParams.get('id');
-
-    try {
-      const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadSingleProduct?id=${id}`, {
-        method: "GET",
-        credentials: "include"
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-          setProduct({
-            mainCategory: json.product.subCategory.category.mainCategory.name,
-            category: json.product.subCategory.category.name,
-            subCategory: json.product.subCategory.name,
-            brand: json.product.brand.name,
-            title: json.product.title,
-            description: json.product.description,
-            price: json.stock.price,
-            discount: json.product.discount,
-            imagePath: `http://localhost:8080/Edumart-Backend/product-images/${json.product.id}/image1.png`
-          });
-          console.log("LoadSingleProduct successfully");
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("LoadSingleProduct failed. Please try again");
-        toast.error("LoadSingleProduct failed. Please try again");
+  useEffect(() => {
+    const loadProductData = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const id = searchParams.get('id');
+      if (!id) {
+        toast.error("Product ID is missing from the URL.");
+        return;
       }
-    } catch (error) {
-      toast.error("Internal Server Error. Please try again later");
-      console.error("LoadSingleProduct Error:", error);
-    }
+
+      try {
+        const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadSingleProduct?id=${id}`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json.status) {
+            console.log(json.productList);
+            console.log(json.stockList);
+            setProduct({
+              mainCategory: json.product.subCategory.category.mainCategory.name,
+              category: json.product.subCategory.category.name,
+              subCategory: json.product.subCategory.name,
+              brand: json.product.brand.name,
+              title: json.product.title,
+              description: json.product.description,
+              price: json.stock.price,
+              discount: json.product.discount,
+              imagePath: `http://localhost:8080/Edumart-Backend/product-images/${json.product.id}/image1.png`
+            });
+
+            relatedProductsData = json.stockList.map((item: any) => ({
+              id: item.product.id,
+              name: item.product.title,
+              price: item.price.toFixed(2),
+              oldPrice: (item.price * 100 / (100 - item.product.discount)).toFixed(2),
+              img: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
+            }));
+            console.log("LoadSingleProduct successfully");
+          } else {
+            console.log(json.message);
+            toast.error(json.message);
+          }
+        } else {
+          console.log("LoadSingleProduct failed. Please try again");
+          toast.error("LoadSingleProduct failed. Please try again");
+        }
+      } catch (error) {
+        toast.error("Internal Server Error. Please try again later");
+        console.error("LoadSingleProduct Error:", error);
+      }
+    };
+
+    loadProductData();
+  }, []);
+
+  const handleIncrease = () => {
+    setQuantity(prevQuantity => prevQuantity + 1);
+  };
+
+  const handleDecrease = () => {
+    setQuantity(prevQuantity => (prevQuantity > 1 ? prevQuantity - 1 : 1));
   };
 
   const formattedPrice1 = new Intl.NumberFormat("en-US", {
@@ -263,19 +371,16 @@ const ProductPage: React.FC = () => {
     const priceNum = parseFloat(String(product.price));
     const discountNum = parseFloat(String(product.discount));
 
-    if (isNaN(priceNum) || isNaN(discountNum)) return '';
+    if (isNaN(priceNum) || isNaN(discountNum) || discountNum >= 100) return '';
 
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(Number(((priceNum * 100 / (100 - discountNum))).toFixed(2)));
-
   };
 
-  //load product data from backend
-
   return (
-    <div className="font-sans bg-white text-gray-800">
+    <div className="font-sans bg-white text-gray-800 pt-20">
       <div className="container mx-auto p-4 lg:p-8">
         {/* BREADCRUMBS NAVIGATION */}
         <nav className="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
@@ -304,7 +409,7 @@ const ProductPage: React.FC = () => {
               <div className="flex-1 border rounded-lg p-4 flex items-center justify-center h-[350px] md:h-[450px]">
                 <img
                   src={product.imagePath}
-                  alt="Thumbnail"
+                  alt="Main product"
                   className="max-w-full max-h-full object-contain"
                   onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/e0e0e0/757575?text=Image+Not+Found'; }}
                 />
@@ -340,11 +445,11 @@ const ProductPage: React.FC = () => {
                 <span className="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full">-{product.discount}% OFF</span>
               </div>
             </div>
-            {/* <div className="flex items-center bg-gray-50 p-3 rounded-lg my-5 border">
-              <span className="font-semibold">LKR 2,533.33 X 3</span>
+            <div className="flex items-center bg-gray-50 p-3 rounded-lg my-5 border">
+              <span className="font-semibold">LKR {(product.price / 3).toFixed(2)} X 3</span>
               <span className="text-gray-500 mx-2">with</span>
-              <img src={mintpayLogoUrl} alt="mintpay" className="h-4" />
-            </div> */}
+              <img src={kokopayLogoUrl} alt="mintpay" className="h-4" />
+            </div>
             <div className="flex items-center my-6">
               <label htmlFor="quantity" className="font-semibold mr-4 text-gray-800">Quantity</label>
               <div className="flex border rounded-md overflow-hidden">
@@ -354,8 +459,8 @@ const ProductPage: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <button className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-transform transform hover:scale-105">Add to cart</button>
-              <button className="flex-1 bg-lime-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-lime-600 transition-transform transform hover:scale-105">Buy Now</button>
+              <button className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-transform transform hover:scale-105 cursor-pointer">Add to cart</button>
+              <button className="flex-1 bg-lime-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-lime-600 transition-transform transform hover:scale-105 cursor-pointer">Buy Now</button>
             </div>
             <hr className="my-6" />
             <div className="text-sm text-gray-600 space-y-2">

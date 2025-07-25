@@ -107,7 +107,7 @@ const LoginPage = () => {
           if (json.message == "not verified") {
             window.location.href = "/Auth/VrifyAccount";
           } else {
-            window.location.href = "/home";
+            window.location.href = "/";
           }
         } else {
           console.log(json.message);

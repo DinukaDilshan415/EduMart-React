@@ -26,7 +26,7 @@ const VerifyAccount = () => {
 
         if (json.status) {
 
-          window.location.href = "/home";
+          window.location.href = "/";
 
           console.log(json);
           console.log("Verification successful, redirecting to home page...");
