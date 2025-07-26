@@ -119,7 +119,7 @@ const ChevronRightIcon: React.FC<IconProps> = ({ className }) => (
 
 // --- Placeholder Data & URLs ---
 const promoImageUrl = "https://i.imgur.com/eBw1M5I.png";
-const kokopayLogoUrl = "https://www.adahorana.lk/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo-koko.c2b21c17.png&w=1200&q=75";
+const kokopayLogoUrl = "https://www.promateworld.com/images/koko.png";
 
 // --- Sub-components ---
 

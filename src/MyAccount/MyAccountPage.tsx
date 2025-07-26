@@ -771,8 +771,7 @@ const MyAccountPage = () => {
       if (response.ok) {
         const json = await response.json();
         if (json.status) {
-          window.location.href = "/";
-
+          window.location.href = "/login";
 
         } else {
           console.log(json.message);
