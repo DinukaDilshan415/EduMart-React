@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import Footer from "../Footer/Footer"
 import Header from "../Header/Header"
 import MainNav from "../Navigation/MainNav"
@@ -5,12 +6,13 @@ import HomeProducts from "./HomeProducts"
 
 
 const Home = () => {
+
   return (
     <>
       <Header />
       <MainNav />
       <div className="container mx-auto px-4">
-        <HomeProducts />
+        <HomeProducts/>
       </div>
       <Footer />
     </>

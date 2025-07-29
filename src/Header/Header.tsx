@@ -1,21 +1,26 @@
 import { ShoppingCart } from 'lucide-react';
+import { useCart } from '../Cart/useCart';
 
 export default function Header() {
 
+  const { cartCount, fetchCartCount } = useCart();
+
   return (
 
-    <div className='fixed w-full top-0 z-50 flex justify-center bg-slate-50 p-4'>
+    <div className='fixed w-full top-0 z-50 flex justify-center bg-slate-50 p-4' onClick={fetchCartCount}>
 
       <div className="w-10/12 top-0 z-50 flex justify-between bg-slate-50">
         {/* <!-- brand-image --> */}
         <div className="w-4/12 mx-auto items-center">
+        <a href="/">
           <img className="h-12"
             src="https://raw.githubusercontent.com/DinukaDilshan415/images/e901f9915a4c2352ca11d97a9fde00698b100e14/edumart-svg-diga.svg"
             alt="" />
+            </a>
         </div>
 
         {/* <!-- search bar --> */}
-        <div className="w-8/12 flex items-center justify-center">
+        <div className="w-8/12 flex items-center justify-center" >
           <div className="w-full max-w-2xl min-w-[200px]">
             <div className="relative flex items-center">
               <div className="absolute flex items-center">
@@ -54,13 +59,12 @@ export default function Header() {
           </div>
         </div>
 
-
-
         {/* <!-- cart/login --> */}
         <div className="w-4/12 flex items-center justify-center text-right">
 
           {/* <!-- cart --> */}
           <div className="w-6/12">
+          <a href="/product/cart">
             <button type="button"
               className="relative inline-flex items-center cursor-pointer text-sm font-medium text-center text-white mt-1 p-1 hover:shadow-lg hover:border-2 hover:border-sky-300 rounded-xl">
               <ShoppingCart color="#000000" size={26}/>
@@ -68,8 +72,9 @@ export default function Header() {
               <span className="sr-only">Notifications</span>
               <div
                 className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-black border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">
-                20</div>
+                {cartCount}</div>
             </button>
+            </a>
           </div>
 
           {/* <!-- profile/login --> */}

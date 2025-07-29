@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useCart } from '../Cart/useCart';
 
 // --- TYPE DEFINITIONS ---
 
@@ -117,6 +118,7 @@ const PopularCategoryCard: React.FC<PopularCategoryCardProps> = ({ category }) =
 );
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
+
   <a href={`/singleproduct?id=${product.id}`}>
     <div className="flex-shrink-0 w-56 text-left group p-2 rounded-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
       <div className="relative overflow-hidden rounded-lg border">
@@ -130,8 +132,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
         {product.discount && (
           <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-{product.discount}%</div>
         )}
-        <a href="#">
-          <button className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
+        <a href="#" onClick={(e) => e.preventDefault()} className="absolute inset-0">
+          <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
             <ShoppingCartIcon className="w-5 h-5" />
           </button>
         </a>
@@ -154,6 +156,37 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
     </div>
   </a>
 );
+
+//addtoCart function
+
+const addToCart = async (productId: string, qty: number) => {
+
+  try {
+    const response = await fetch(`http://localhost:8080/Edumart-Backend/AddToCart?id=${productId}&qty=${qty}`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      if (json.status) {
+        console.log(json.message);
+        toast.success(json.message);
+      } else {
+        console.log(json.message);
+        toast.error(json.message);
+      }
+    } else {
+      console.log("AddToCart failed. Please try again");
+      toast.error("AddToCart failed. Please try again");
+    }
+  } catch (error) {
+    toast.error("Internal Server Error. Please try again later");
+    console.error("AddToCart Error:", error);
+  }
+};
+
+//addtoCart function
 
 // --- NEW PRODUCT CAROUSEL COMPONENT ---
 const ProductCarousel: React.FC<ProductCarouselProps> = ({ section }) => {

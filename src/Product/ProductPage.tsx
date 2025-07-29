@@ -30,6 +30,7 @@ interface ProductData {
   price: number;
   discount: number;
   imagePath: string;
+  id: string;
 }
 
 
@@ -174,8 +175,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
         />
       </div>
       <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</div>
-      <button className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
-        <ShoppingCartIcon className="w-5 h-5" />
+      <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
+        <ShoppingCartIcon className="w-5 h-5"/>
       </button>
     </div>
     <h4 className="font-medium text-gray-800 mt-3 text-base h-10">{product.name}</h4>
@@ -266,6 +267,36 @@ const RelatedProducts: React.FC = () => {
   );
 };
 
+  //addtoCart function
+
+  const addToCart = async (productId: string, qty: number) => {
+
+      try {
+        const response = await fetch(`http://localhost:8080/Edumart-Backend/AddToCart?id=${productId}&qty=${qty}`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json.status) {
+            console.log(json.message);
+            toast.success(json.message);
+          } else {
+            console.log(json.message);
+            toast.error(json.message);
+          }
+        } else {
+          console.log("AddToCart failed. Please try again");
+          toast.error("AddToCart failed. Please try again");
+        }
+      } catch (error) {
+        toast.error("Internal Server Error. Please try again later");
+        console.error("AddToCart Error:", error);
+      }
+    };
+
+  //addtoCart function
 
 /**
  * A responsive single product view component with functional quantity and tabs.
@@ -294,7 +325,8 @@ const ProductPage: React.FC = () => {
     description: '',
     price: 0,
     discount: 0,
-    imagePath: 'https://placehold.co/400x400/e0e0e0/757575?text=Loading...'
+    imagePath: 'https://placehold.co/400x400/e0e0e0/757575?text=Loading...',
+    id: ''
   });
 
   useEffect(() => {
@@ -315,8 +347,6 @@ const ProductPage: React.FC = () => {
         if (response.ok) {
           const json = await response.json();
           if (json.status) {
-            console.log(json.productList);
-            console.log(json.stockList);
             setProduct({
               mainCategory: json.product.subCategory.category.mainCategory.name,
               category: json.product.subCategory.category.name,
@@ -326,7 +356,8 @@ const ProductPage: React.FC = () => {
               description: json.product.description,
               price: json.stock.price,
               discount: json.product.discount,
-              imagePath: `http://localhost:8080/Edumart-Backend/product-images/${json.product.id}/image1.png`
+              imagePath: `http://localhost:8080/Edumart-Backend/product-images/${json.product.id}/image1.png`,
+              id: json.product.id
             });
 
             relatedProductsData = json.stockList.map((item: any) => ({
@@ -336,7 +367,6 @@ const ProductPage: React.FC = () => {
               oldPrice: (item.price * 100 / (100 - item.product.discount)).toFixed(2),
               img: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
             }));
-            console.log("LoadSingleProduct successfully");
           } else {
             console.log(json.message);
             toast.error(json.message);
@@ -459,7 +489,7 @@ const ProductPage: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <button className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-transform transform hover:scale-105 cursor-pointer">Add to cart</button>
+              <button onClick={() => addToCart(String(product.id), quantity)} className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-transform transform hover:scale-105 cursor-pointer">Add to cart</button>
               <button className="flex-1 bg-lime-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-lime-600 transition-transform transform hover:scale-105 cursor-pointer">Buy Now</button>
             </div>
             <hr className="my-6" />
