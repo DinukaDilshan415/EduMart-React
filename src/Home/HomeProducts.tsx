@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useCart } from '../Cart/useCart';
 
 // --- TYPE DEFINITIONS ---
 
@@ -236,7 +235,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ section }) => {
           {section.subCategories.map(sub => (
             <a key={sub} href="#" className="hover:text-blue-600">{sub}</a>
           ))}
-          <a href="#" className="font-bold text-blue-600 hover:underline">View All</a>
+          <a href="/product/search" className="font-bold text-blue-600 hover:underline">View All</a>
         </div>
       </div>
 

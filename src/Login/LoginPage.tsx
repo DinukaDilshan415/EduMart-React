@@ -34,7 +34,6 @@ const LoginPage = () => {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [comfpassword, setComfPassword] = useState("");
-  const [message, setMessage] = useState("");
 
   const signUp = async () => {
     const user = {
@@ -124,8 +123,6 @@ const LoginPage = () => {
   };
 
   // Login functionality
-
-  const notify = () => toast.error('Something went wrong!');
 
   return (
     <>

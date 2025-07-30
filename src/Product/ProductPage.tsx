@@ -165,37 +165,41 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
 );
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
-  <div className="flex-shrink-0 w-52 text-left group p-2 rounded-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-2">
-    <div className="relative overflow-hidden rounded-lg border">
-      <div className="aspect-w-1 aspect-h-1 w-full bg-gray-100">
-        <img
-          src={product.img}
-          alt={product.name}
-          className="w-full h-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
-        />
+  <a href={`/singleproduct?id=${product.id}`}>
+    <div className="flex-shrink-0 w-52 text-left group p-2 rounded-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-2">
+      <div className="relative overflow-hidden rounded-lg border">
+        <div className="aspect-w-1 aspect-h-1 w-full bg-gray-100">
+          <img
+            src={product.img}
+            alt={product.name}
+            className="w-full h-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+        <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</div>
+            <a href="#" onClick={(e) => e.preventDefault()} className="absolute inset-0">
+              <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
+                <ShoppingCartIcon className="w-5 h-5" />
+              </button>
+            </a>
       </div>
-      <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</div>
-      <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
-        <ShoppingCartIcon className="w-5 h-5"/>
-      </button>
-    </div>
-    <h4 className="font-medium text-gray-800 mt-3 text-base h-10">{product.name}</h4>
-    <div className="flex items-baseline space-x-2 mt-2">
-      <p className="text-red-600 text-lg font-bold">LKR {product.price}</p>
-      <p className="text-gray-500 line-through text-sm">LKR {product.oldPrice}</p>
-    </div>
-    <div className="text-xs text-gray-500 mt-1">
-      <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3 with </span>
-      <img src={kokopayLogoUrl} alt="mintpay" className="h-3 inline-block" />
-    </div>
-    {/* <div className="flex items-center mt-1">
+      <h4 className="font-medium text-gray-800 mt-3 text-base h-10">{product.name}</h4>
+      <div className="flex items-baseline space-x-2 mt-2">
+        <p className="text-red-600 text-lg font-bold">LKR {product.price}</p>
+        <p className="text-gray-500 line-through text-sm">LKR {product.oldPrice}</p>
+      </div>
+      <div className="text-xs text-gray-500 mt-1">
+        <span>LKR {(parseFloat(product.price.replace(/,/g, '')) / 3).toFixed(2)} X 3 with </span>
+        <img src={kokopayLogoUrl} alt="mintpay" className="h-3 inline-block" />
+      </div>
+      {/* <div className="flex items-center mt-1">
             <div className="flex text-yellow-400">
                 {[...Array(product.rating)].map((_, i) => <StarIcon key={i} className="w-4 h-4" />)}
                 {[...Array(5 - product.rating)].map((_, i) => <StarIcon key={i} className="w-4 h-4 text-gray-300" />)}
             </div>
             <span className="text-xs text-gray-500 ml-1">({product.reviewCount})</span>
         </div> */}
-  </div>
+    </div>
+  </a>
 );
 
 const RelatedProducts: React.FC = () => {
@@ -267,36 +271,36 @@ const RelatedProducts: React.FC = () => {
   );
 };
 
-  //addtoCart function
+//addtoCart function
 
-  const addToCart = async (productId: string, qty: number) => {
+const addToCart = async (productId: string, qty: number) => {
 
-      try {
-        const response = await fetch(`http://localhost:8080/Edumart-Backend/AddToCart?id=${productId}&qty=${qty}`, {
-          method: "GET",
-          credentials: "include"
-        });
+  try {
+    const response = await fetch(`http://localhost:8080/Edumart-Backend/AddToCart?id=${productId}&qty=${qty}`, {
+      method: "GET",
+      credentials: "include"
+    });
 
-        if (response.ok) {
-          const json = await response.json();
-          if (json.status) {
-            console.log(json.message);
-            toast.success(json.message);
-          } else {
-            console.log(json.message);
-            toast.error(json.message);
-          }
-        } else {
-          console.log("AddToCart failed. Please try again");
-          toast.error("AddToCart failed. Please try again");
-        }
-      } catch (error) {
-        toast.error("Internal Server Error. Please try again later");
-        console.error("AddToCart Error:", error);
+    if (response.ok) {
+      const json = await response.json();
+      if (json.status) {
+        console.log(json.message);
+        toast.success(json.message);
+      } else {
+        console.log(json.message);
+        toast.error(json.message);
       }
-    };
+    } else {
+      console.log("AddToCart failed. Please try again");
+      toast.error("AddToCart failed. Please try again");
+    }
+  } catch (error) {
+    toast.error("Internal Server Error. Please try again later");
+    console.error("AddToCart Error:", error);
+  }
+};
 
-  //addtoCart function
+//addtoCart function
 
 /**
  * A responsive single product view component with functional quantity and tabs.

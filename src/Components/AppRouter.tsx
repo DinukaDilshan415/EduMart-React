@@ -6,6 +6,7 @@ import MyAccount from "../MyAccount/MyAccount";
 import AdminDashboard from "../Admin/AdminDashboard";
 import SingleProductView from "../Product/SingleProductView";
 import Cart from "../Cart/Cart";
+import Search from "../ProductSearch/Search";
 
 
 const router = createBrowserRouter([
@@ -29,15 +30,19 @@ const router = createBrowserRouter([
     path: "/admin/dashboard",
     Component: AdminDashboard
   },
-    {
+  {
     path: "/singleproduct",
     Component: SingleProductView
   },
   {
     path: "/product/cart",
     Component: Cart
+  },
+  {
+    path: "/product/search",
+    Component: Search
   }
-  
+
 ]);
 
 const AppRouter = () => {

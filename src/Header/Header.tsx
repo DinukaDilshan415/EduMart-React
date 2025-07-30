@@ -1,9 +1,18 @@
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '../Cart/useCart';
+import { useState } from 'react';
+import { redirect, useNavigate } from 'react-router-dom';
 
 export default function Header() {
 
   const { cartCount, fetchCartCount } = useCart();
+  const [searchText, setSearchText] = useState('');
+
+  const handleSearch = () => {
+
+    window.location.href = `/product/search?find=${encodeURIComponent(searchText)}`;
+    setSearchText(""); // Clear the input after navigating
+  };
 
   return (
 
@@ -12,11 +21,11 @@ export default function Header() {
       <div className="w-10/12 top-0 z-50 flex justify-between bg-slate-50">
         {/* <!-- brand-image --> */}
         <div className="w-4/12 mx-auto items-center">
-        <a href="/">
-          <img className="h-12"
-            src="https://raw.githubusercontent.com/DinukaDilshan415/images/e901f9915a4c2352ca11d97a9fde00698b100e14/edumart-svg-diga.svg"
-            alt="" />
-            </a>
+          <a href="/">
+            <img className="h-12"
+              src="https://raw.githubusercontent.com/DinukaDilshan415/images/e901f9915a4c2352ca11d97a9fde00698b100e14/edumart-svg-diga.svg"
+              alt="" />
+          </a>
         </div>
 
         {/* <!-- search bar --> */}
@@ -44,17 +53,19 @@ export default function Header() {
 
               <input
                 className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pr-3 pl-14 py-2 transition duration-300 ease focus:outline-none focus:border-edumartSecondary hover:border-edumartHover shadow-sm focus:shadow"
-                placeholder="Find Here..." />
+                placeholder="Find Here..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
 
-              <button
-                className="rounded-md ml-2 bg-edumartPrimary cursor-pointer p-2 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow-lg hover:bg-edumartHover active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                type="button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                  <path fill-rule="evenodd"
-                    d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
-                    clip-rule="evenodd" />
-                </svg>
-              </button>
+
+                <button onClick={handleSearch}
+                  className="rounded-md ml-2 bg-edumartPrimary cursor-pointer p-2 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow-lg hover:bg-edumartHover active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                  type="button">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path fill-rule="evenodd"
+                      d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+                      clip-rule="evenodd" />
+                  </svg>
+                </button>
+
             </div>
           </div>
         </div>
@@ -64,16 +75,16 @@ export default function Header() {
 
           {/* <!-- cart --> */}
           <div className="w-6/12">
-          <a href="/product/cart">
-            <button type="button"
-              className="relative inline-flex items-center cursor-pointer text-sm font-medium text-center text-white mt-1 p-1 hover:shadow-lg hover:border-2 hover:border-sky-300 rounded-xl">
-              <ShoppingCart color="#000000" size={26}/>
+            <a href="/product/cart">
+              <button type="button"
+                className="relative inline-flex items-center cursor-pointer text-sm font-medium text-center text-white mt-1 p-1 hover:shadow-lg hover:border-2 hover:border-sky-300 rounded-xl">
+                <ShoppingCart color="#000000" size={26} />
 
-              <span className="sr-only">Notifications</span>
-              <div
-                className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-black border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">
-                {cartCount}</div>
-            </button>
+                <span className="sr-only">Notifications</span>
+                <div
+                  className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-black border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">
+                  {cartCount}</div>
+              </button>
             </a>
           </div>
 
