@@ -187,6 +187,36 @@ const addToCart = async (productId: string, qty: number) => {
 
 //addtoCart function
 
+//checkSessionCart function
+
+const checkSessionCart = async () => {
+
+  try {
+    const response = await fetch(`http://localhost:8080/Edumart-Backend/CheckSessionCart`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      if (json.status) {
+        console.log(json.message);
+      } else {
+        console.log(json.message);
+        toast.error(json.message);
+      }
+    } else {
+      console.log("checkSessionCart failed. Please try again");
+      toast.error("checkSessionCart failed. Please try again");
+    }
+  } catch (error) {
+    toast.error("Internal Server Error. Please try again later");
+    console.error("checkSessionCart Error:", error);
+  }
+};
+
+//checkSessionCart function
+
 // --- NEW PRODUCT CAROUSEL COMPONENT ---
 const ProductCarousel: React.FC<ProductCarouselProps> = ({ section }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -331,7 +361,7 @@ const HomeProducts: React.FC = () => {
     };
 
     loadProducts();
-
+    checkSessionCart();
     return () => {
       isMounted = false;
     };

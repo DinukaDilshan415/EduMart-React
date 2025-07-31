@@ -21,8 +21,15 @@ interface Category {
 
 interface Filters {
   price: [number, number];
+  mainCategory: string | null;
   category: string | null;
-  brands: string[];
+  subCategory: string | null;
+  brands: Brand[];
+}
+
+interface Brand {
+  id: string;
+  name: string;
 }
 
 // --- MOCK DATA ---
@@ -42,7 +49,7 @@ let mockProducts: Product[] = [
   // { id: 13, name: 'Mungo Sketch Pad', price: '270.00', oldPrice: '300.00', discount: 10, img: 'https://placehold.co/224x192/f9f9f9/333?text=Sketchpad' },
 ];
 
-const mockCategories: Category[] = [
+let mockCategories: Category[] = [
   {
     id: 'main1', name: 'Stationery', children: [
       { id: 'sub1', name: 'Books', children: [{ id: 'subsub1', name: 'Square Ruled' }, { id: 'subsub2', name: 'Single Ruled' }] },
@@ -58,34 +65,20 @@ const mockCategories: Category[] = [
   { id: 'main3', name: 'Printers & Scanners', children: [] }
 ];
 
-const mockBrands: string[] = ['Rathna', 'Promate', 'Mungo', 'Platignum', 'Epson', 'HP', 'Canon'];
-const PRODUCTS_PER_PAGE: number = 9;
+let mockBrands: Brand[] = [
+  { id: '1', name: 'Rathna' },
+  { id: '2', name: 'Promate' },
+  { id: '3', name: 'Mungo' },
+  { id: '4', name: 'Platignum' },
+  { id: '5', name: 'Epson' },
+  { id: '6', name: 'HP' },
+  { id: '7', name: 'Canon' }
+];
+const PRODUCTS_PER_PAGE: number = 10;
 const MIN_PRICE: number = 0;
-const MAX_PRICE: number = 75000;
+const MAX_PRICE: number = 10000;
 
 // --- HELPER & SUB-COMPONENTS ---
-
-const getAllChildCategoryIds = (categoryId: string, categories: Category[]): string[] => {
-  const ids: string[] = [];
-  const findCategory = (id: string, catList: Category[]): Category | null => {
-    for (const cat of catList) {
-      if (cat.id === id) return cat;
-      if (cat.children) {
-        const found = findCategory(id, cat.children);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-  const category = findCategory(categoryId, categories);
-  const collectIds = (cat: Category | null) => {
-    if (!cat) return;
-    ids.push(cat.id);
-    if (cat.children) cat.children.forEach(collectIds);
-  };
-  collectIds(category);
-  return ids;
-};
 
 interface PriceFilterProps {
   priceRange: [number, number];
@@ -128,6 +121,13 @@ const PriceFilter: React.FC<PriceFilterProps> = ({ priceRange, setPriceRange }) 
           onTouchEnd={onMouseUp}
           className="thumb z-10" // z-10 to ensure min thumb is above max thumb
         />
+
+        {/* The visual track and selected range */}
+        <div className="relative w-full">
+          <div className="absolute w-full h-1 bg-gray-200 rounded-full top-1/2 -translate-y-1/2"></div>
+          <div ref={range} className="absolute h-1 bg-blue-500 rounded-full top-1/2 -translate-y-1/2"></div>
+        </div>
+
         {/* Max value slider */}
         <input
           type="range"
@@ -142,11 +142,7 @@ const PriceFilter: React.FC<PriceFilterProps> = ({ priceRange, setPriceRange }) 
           onTouchEnd={onMouseUp}
           className="thumb"
         />
-        {/* The visual track and selected range */}
-        <div className="relative w-full">
-          <div className="absolute w-full h-1 bg-gray-200 rounded-full top-1/2 -translate-y-1/2"></div>
-          <div ref={range} className="absolute h-1 bg-blue-500 rounded-full top-1/2 -translate-y-1/2"></div>
-        </div>
+
       </div>
       <div className="flex justify-between text-xs text-gray-500 mt-2">
         <span>LKR {minVal.toLocaleString()}</span>
@@ -158,14 +154,40 @@ const PriceFilter: React.FC<PriceFilterProps> = ({ priceRange, setPriceRange }) 
 
 interface CategoryItemProps {
   category: Category;
+  selectedMain: string | null;
   selectedCategory: string | null;
-  onCategorySelect: (id: string) => void;
+  selectedSubCategory: string | null;
+  handleCategorySelect: (mainId: string, categoryId?: string, subId?: string) => void;
+  mainId?: string;
+  categoryId?: string;
   level?: number;
 }
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ category, selectedCategory, onCategorySelect, level = 0 }) => {
-  const [isOpen, setIsOpen] = useState<boolean>(level < 1);
-  const isSelected = selectedCategory === category.id;
+const CategoryItem: React.FC<CategoryItemProps> = ({
+  category,
+  selectedMain,
+  selectedCategory,
+  selectedSubCategory,
+  handleCategorySelect,
+  mainId,
+  categoryId,
+  level = 0
+}) => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  // Determine which radio is selected
+  let isSelected = false;
+  if (level === 0) isSelected = selectedMain === category.id;
+  else if (level === 1) isSelected = selectedCategory === category.id;
+  else if (level === 2) isSelected = selectedSubCategory === category.id;
+
+  // Handle selection
+  const onSelect = () => {
+    if (level === 0) handleCategorySelect(category.id, undefined, undefined);
+    else if (level === 1 && mainId) handleCategorySelect(mainId, category.id, undefined);
+    else if (level === 2 && mainId && categoryId) handleCategorySelect(mainId, categoryId, category.id);
+  };
+
   return (
     <div style={{ paddingLeft: `${level * 16}px` }}>
       <div className="flex items-center my-2">
@@ -174,13 +196,33 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, selectedCategory,
             {isOpen ? '−' : '+'}
           </button>
         )}
-        <label className={`flex items-center space-x-2 cursor-pointer ${!category.children || category.children.length === 0 ? 'ml-7' : ''}`}>
-          <input type="radio" name="category" checked={isSelected} onChange={() => onCategorySelect(category.id)} className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+        <label className="flex items-center space-x-2 cursor-pointer">
+          <input
+            type="radio"
+            name="category"
+            checked={isSelected}
+            onChange={onSelect}
+            className="form-radio min-w-4 min-h-4 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+          />
           <span className={`text-sm ${isSelected ? 'font-bold text-gray-800' : 'text-gray-600'}`}>{category.name}</span>
         </label>
       </div>
       {isOpen && category.children && category.children.length > 0 && (
-        <div>{category.children.map((child) => <CategoryItem key={child.id} category={child} selectedCategory={selectedCategory} onCategorySelect={onCategorySelect} level={level + 1} />)}</div>
+        <div>
+          {category.children.map(child => (
+            <CategoryItem
+              key={child.id}
+              category={child}
+              selectedMain={selectedMain}
+              selectedCategory={selectedCategory}
+              selectedSubCategory={selectedSubCategory}
+              handleCategorySelect={handleCategorySelect}
+              mainId={level === 0 ? category.id : mainId}
+              categoryId={level === 1 ? category.id : categoryId}
+              level={level + 1}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -188,27 +230,38 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, selectedCategory,
 
 interface CategoryFilterProps {
   categories: Category[];
-  selectedCategory: string | null;
-  setSelectedCategory: (id: string | null) => void;
+  filters: Filters;
+  handleCategorySelect: (mainId: string, categoryId?: string, subId?: string) => void;
 }
 
-const CategoryFilter: React.FC<CategoryFilterProps> = ({ categories, selectedCategory, setSelectedCategory }) => (
+const CategoryFilter: React.FC<CategoryFilterProps> = ({ categories, filters, handleCategorySelect }) => (
   <div className="p-4 border-b border-gray-200">
     <h3 className="font-semibold mb-2 text-sm text-gray-800 tracking-wide">PRODUCT CATEGORIES</h3>
-    {categories.map((category) => <CategoryItem key={category.id} category={category} selectedCategory={selectedCategory} onCategorySelect={setSelectedCategory} />)}
+    {categories.map(main => (
+      <CategoryItem
+        key={main.id}
+        category={main}
+        selectedMain={filters.mainCategory}
+        selectedCategory={filters.category}
+        selectedSubCategory={filters.subCategory}
+        handleCategorySelect={handleCategorySelect}
+        level={0}
+      />
+    ))}
   </div>
 );
 
 interface BrandFilterProps {
-  brands: string[];
-  selectedBrands: string[];
-  setSelectedBrands: (brands: string[]) => void;
+  brands: Brand[];
+  selectedBrands: Brand[];
+  setSelectedBrands: (brands: Brand[]) => void;
 }
 
 const BrandFilter: React.FC<BrandFilterProps> = ({ brands, selectedBrands, setSelectedBrands }) => {
-  const handleBrandChange = (brand: string) => {
-    const newSelectedBrands = selectedBrands.includes(brand)
-      ? selectedBrands.filter((b) => b !== brand)
+  const handleBrandChange = (brand: Brand) => {
+    const exists = selectedBrands.some(b => b.id === brand.id);
+    const newSelectedBrands = exists
+      ? selectedBrands.filter(b => b.id !== brand.id)
       : [...selectedBrands, brand];
     setSelectedBrands(newSelectedBrands);
   };
@@ -217,12 +270,19 @@ const BrandFilter: React.FC<BrandFilterProps> = ({ brands, selectedBrands, setSe
     <div className="p-4">
       <h3 className="font-semibold mb-2 text-sm text-gray-800 tracking-wide">BY BRANDS</h3>
       <div className="space-y-2">
-        {brands.map((brand) => (
-          <label key={brand} className="flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" checked={selectedBrands.includes(brand)} onChange={() => handleBrandChange(brand)} className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-            <span className="text-sm text-gray-600">{brand}</span>
-          </label>
-        ))}
+        {brands
+          .filter(brand => brand.id && brand.name)
+          .map((brand) => (
+            <label key={`${brand.id}-${brand.name}`} className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedBrands.some(b => b.id === brand.id)}
+                onChange={() => handleBrandChange(brand)}
+                className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-600">{brand.name}</span>
+            </label>
+          ))}
       </div>
     </div>
   );
@@ -232,17 +292,35 @@ interface FilterSidebarProps {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   clearAllFilters: () => void;
+  handleCategorySelect: (mainId: string, categoryId?: string, subId?: string) => void;
+  categories: Category[];
+  brands: Brand[];
 }
 
-const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters, clearAllFilters }) => (
+const FilterSidebar: React.FC<FilterSidebarProps> = ({
+  filters,
+  setFilters,
+  clearAllFilters,
+  handleCategorySelect,
+  categories,
+  brands
+}) => (
   <aside className="w-full md:w-1/4 lg:w-1/5 bg-white border-r border-gray-200 rounded-lg shadow-sm">
     <div className="p-4 flex justify-between items-center border-b border-gray-200">
       <h2 className="text-md font-bold text-gray-800">FILTERS</h2>
       <button onClick={clearAllFilters} className="text-xs text-blue-500 hover:underline">Clear All</button>
     </div>
     <PriceFilter priceRange={filters.price} setPriceRange={(price) => setFilters(prev => ({ ...prev, price }))} />
-    <CategoryFilter categories={mockCategories} selectedCategory={filters.category} setSelectedCategory={(category) => setFilters(prev => ({ ...prev, category }))} />
-    <BrandFilter brands={mockBrands} selectedBrands={filters.brands} setSelectedBrands={(brands) => setFilters(prev => ({ ...prev, brands }))} />
+
+    {/* Use the 'categories' prop here */}
+    <CategoryFilter categories={categories} filters={filters} handleCategorySelect={handleCategorySelect} />
+
+    {/* Use the 'brands' prop here to fix the bug */}
+    <BrandFilter
+      brands={brands}
+      selectedBrands={filters.brands}
+      setSelectedBrands={(brands) => setFilters(prev => ({ ...prev, brands }))}
+    />
   </aside>
 );
 
@@ -259,7 +337,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const kokopayLogoUrl = 'https://www.promateworld.com/images/koko.png'; // Placeholder logo
 
-  
+
   //addtoCart function
 
   const addToCart = async (productId: string, qty: number) => {
@@ -359,99 +437,185 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 
 // --- MAIN COMPONENT ---
 const ProductSearch: React.FC = () => {
-  const initialFilters: Filters = { price: [MIN_PRICE, MAX_PRICE], category: null, brands: [] };
+  const initialFilters: Filters = {
+    price: [MIN_PRICE, MAX_PRICE],
+    mainCategory: null,
+    category: null,
+    subCategory: null,
+    brands: []
+  };
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts);
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortBy, setSortBy] = useState<string>('default');
+  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [brands, setBrands] = useState<Brand[]>(mockBrands);
+
+  // useEffect(() => {
+  //   let result: Product[] = [...products];
+  //   result = result.filter(p => parseFloat(p.price) >= filters.price[0] && parseFloat(p.price) <= filters.price[1]);
+  //   if (filters.brands.length > 0) result = result.filter(p => p.brand && filters.brands.includes(p.brand));
+  //   if (filters.category) {
+  //     const categoryIdsToMatch = getAllChildCategoryIds(filters.category, mockCategories);
+  //     result = result.filter(p => p.categoryId && categoryIdsToMatch.includes(p.categoryId));
+  //   }
+
+  //   switch (sortBy) {
+
+  //     case 'discount-desc': result.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0)); break;
+  //     case 'price-asc': result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price)); break;
+  //     case 'price-desc': result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price)); break;
+  //     case 'name-asc': result.sort((a, b) => a.name.localeCompare(b.name)); break;
+  //     case 'name-desc': result.sort((a, b) => b.name.localeCompare(a.name)); break;
+  //     default: result.sort((a, b) => a.id - b.id); break;
+  //   }
+
+  //   setFilteredProducts(result);
+  //   setCurrentPage(1);
+  // }, [filters, sortBy, products]);\\
 
   useEffect(() => {
-    let result: Product[] = [...products];
-    result = result.filter(p => parseFloat(p.price) >= filters.price[0] && parseFloat(p.price) <= filters.price[1]);
-    if (filters.brands.length > 0) result = result.filter(p => p.brand && filters.brands.includes(p.brand));
-    if (filters.category) {
-      const categoryIdsToMatch = getAllChildCategoryIds(filters.category, mockCategories);
-      result = result.filter(p => p.categoryId && categoryIdsToMatch.includes(p.categoryId));
-    }
-
-    switch (sortBy) {
-
-      case 'discount-desc': result.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0)); break;
-      case 'price-asc': result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price)); break;
-      case 'price-desc': result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price)); break;
-      case 'name-asc': result.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'name-desc': result.sort((a, b) => b.name.localeCompare(a.name)); break;
-      default: result.sort((a, b) => a.id - b.id); break;
-    }
-
-    setFilteredProducts(result);
+    searchProducts();
     setCurrentPage(1);
-  }, [filters, sortBy, products]);
+  }, [filters, sortBy]);
 
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
 
+  //loadSearchDetails function
+
+  const loadSearchDetails = async () => {
+
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/loadSearchDetails`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json);
+
+          // Correctly format and set categories state
+          const fetchedCategories = json.searchDetails.map((main: any) => ({
+            id: main.mainCategory.id,
+            name: main.mainCategory.name,
+            children: main.categories.map((sub: any) => ({
+              id: sub.category.id,
+              name: sub.category.name,
+              children: sub.subCategories.map((subsub: any) => ({
+                id: subsub.id,
+                name: subsub.name
+              }))
+            }))
+          }));
+          setCategories(fetchedCategories); // <-- Use state setter
+
+          // Correctly format and set brands state
+          const fetchedBrands = json.brandList.map((b: any) => ({
+            id: b.id,
+            name: b.name
+          }));
+          setBrands(fetchedBrands); // <-- Use state setter
+
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("loadSearchDetails failed. Please try again");
+        toast.error("loadSearchDetails failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("loadSearchDetails Error:", error);
+    }
+  };
+
+  //loadSearchDetails function
+
   //search products
 
-  useEffect(() => {
-    const searchProducts = async () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      let findText = searchParams.get('find');
+  const searchProducts = async () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    let findText = searchParams.get('find');
 
-      if (!findText) {
-        findText = '';
-      }
+    if (!findText) {
+      findText = '';
+    }
 
-      const search = {
-        findText: findText,
-        // filters: {
-        //   price: filters.price,
-        //   category: filters.category,
-        //   brands: filters.brands
-        // }
-      };
-
-      try {
-        const response = await fetch(`http://localhost:8080/Edumart-Backend/SearchProducts`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(search)
-        });
-
-        if (response.ok) {
-          const json = await response.json();
-          if (json.status) {
-            console.log(json);
-            const backendProducts = json.stockList.map((item: any) => ({
-              id: item.product.id,
-              name: item.product.title,
-              price: item.price.toFixed(2),
-              oldPrice: (item.price * 100 / (100 - item.product.discount)).toFixed(2),
-              discount: item.product.discount,
-              img: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
-            }));
-            setProducts(backendProducts); // <-- update state here
-          } else {
-            toast.error(json.message);
-          }
-        } else {
-          toast.error("SearchProducts failed. Please try again");
-        }
-      } catch (error) {
-        toast.error("Internal Server Error. Please try again later");
-        console.error("SearchProducts Error:", error);
-      }
+    const search = {
+      findText: findText,
+      minPrice: filters.price[0],
+      maxPrice: filters.price[1],
+      mainCategoryId: filters.mainCategory || "",
+      categoryId: filters.category || "",
+      subCategoryId: filters.subCategory || "",
+      brands: filters.brands.map(b => ({ id: b.id, name: b.name })),
+      sortBy,
     };
+    console.log(search);
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/SearchProducts`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(search)
+      });
 
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json);
+          const backendProducts = json.stockList.map((item: any) => ({
+            id: item.product.id,
+            name: item.product.title,
+            price: item.price.toFixed(2),
+            oldPrice: (item.price * 100 / (100 - item.product.discount)).toFixed(2),
+            discount: item.product.discount,
+            img: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
+          }));
+          setProducts(backendProducts); // <-- update state here
+          setFilteredProducts(backendProducts);
+        } else {
+          if (json.message == "Products Not Found !") {
+            setFilteredProducts([]);
+          }
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("SearchProducts failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("SearchProducts Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadSearchDetails();
     searchProducts();
   }, []);
 
   //search products
+
+  const handleCategorySelect = (
+    mainId: string,
+    categoryId?: string,
+    subId?: string
+  ) => {
+    setFilters(prev => ({
+      ...prev,
+      mainCategory: mainId || null,
+      category: categoryId || null,
+      subCategory: subId || null
+    }));
+  };
 
   return (
     <>
@@ -495,7 +659,14 @@ const ProductSearch: React.FC = () => {
       <div className="bg-gray-50 font-sans pt-20">
         <div className="container mx-auto p-4">
           <div className="flex flex-col md:flex-row gap-6">
-            <FilterSidebar filters={filters} setFilters={setFilters} clearAllFilters={() => { setFilters(initialFilters); setSortBy('default'); }} />
+            <FilterSidebar
+              filters={filters}
+              setFilters={setFilters}
+              clearAllFilters={() => { setFilters(initialFilters); setSortBy('default'); }}
+              handleCategorySelect={handleCategorySelect}
+              categories={categories}
+              brands={brands}    
+            />
             <main className="flex-1">
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <p className="text-sm text-gray-600">
@@ -505,8 +676,6 @@ const ProductSearch: React.FC = () => {
                   <label htmlFor="sort" className="text-sm text-gray-600">Sort by:</label>
                   <select id="sort" value={sortBy} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)} className="border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm py-1">
                     <option value="default">Default</option>
-                    <option value="popularity">Popularity</option>
-                    <option value="rating-desc">Rating: High to Low</option>
                     <option value="discount-desc">Discount: High to Low</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
