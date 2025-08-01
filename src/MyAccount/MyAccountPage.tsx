@@ -39,9 +39,10 @@ type City = {
 };
 
 type Address = {
-  id?: number;
+  id: number;
   type: string;
   full_name: string;
+  mobile: string; // Added this line
   address: string;
   cityName: string;
   postal_code: string;
@@ -98,14 +99,6 @@ const MyAccountPage = () => {
   // set account data
 
   const [cities, setCities] = useState<City[]>([]);
-
-  // load city data
-  // const [accountData, setAccountData] = useState<AccountData>({
-  //   username: '',
-  //   email: '',
-  //   mobile: '',
-  //   created_at: ''
-  // });
 
   const loadCityData = async () => {
 
@@ -310,112 +303,11 @@ const MyAccountPage = () => {
     </div>
   );
 
-  //   const [addresses, setAddresses] = useState([
-  //   {
-  //     id: 1,
-  //     type: 'Home',
-  //     name: 'John Doe',
-  //     address: '123 Main Street, Apt 4B',
-  //     city: 'New York',
-  //     state: 'NY',
-  //     zip: '10001',
-  //     isDefault: true
-  //   },
-  //   {
-  //     id: 2,
-  //     type: 'Work',
-  //     name: 'John Doe',
-  //     address: '456 Business Ave, Suite 200',
-  //     city: 'New York',
-  //     state: 'NY',
-  //     zip: '10002',
-  //     isDefault: false
-  //   }
-  // ]);
-
-  // const [newAddress, setNewAddress] = useState({
-  //     type: 'Home',
-  //     fullName: '',
-  //     address: '',
-  //     city: '',
-  //     pCode: '',
-  //     isDefault: false
-  // });
-
-  //   const handleAddAddress = () => {
-  //   const newId = addresses.length + 1;
-  //   setAddresses([...addresses, { ...newAddress, id: newId }]);
-  //   setNewAddress({
-  //     type: 'Home',
-  //     fullName: '',
-  //     address: '',
-  //     city: '',
-  //     pCode: '',
-  //     isDefault: false
-  //   });
-  //   setShowAddressForm(false);
-  //   alert('Address added successfully!');
-  // };
-
-  // const handleDeleteAddress = (id: number) => {
-  //   setAddresses(addresses.filter(addr => addr.id !== id));
-  //   alert('Address deleted successfully!');
-  // };
-
-  // Address Registration functionality
-  // const [username, setUsername] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [mobile, setMobile] = useState("");
-  // const [password, setPassword] = useState("");
-  // const [comfpassword, setComfPassword] = useState("");
-  // const [message, setMessage] = useState("");
-
-  // const signUp = async () => {
-  //   const user = {
-  //     username,
-  //     email,
-  //     mobile,
-  //     password,
-  //     comfpassword
-  //   };
-
-  //   try {
-  //     const response = await fetch("http://localhost:8080/Edumart-Backend/SignUp", {
-  //       method: "POST",
-  //       credentials: "include",
-  //       headers: {
-  //         "Content-Type": "application/json"
-  //       },
-  //       body: JSON.stringify(user)
-  //     });
-
-  //     if (response.ok) {
-  //       const json = await response.json();
-  //       if (json.status) {
-  //         // redirect to verify page
-  //         window.location.href = "/Auth/VrifyAccount";
-
-  //         console.log(json);
-
-  //         console.log("Signup successful, redirecting to verify page...");
-  //       } else {
-  //         console.log(json.message);
-  //         toast.error(json.message);
-  //       }
-  //     } else {
-  //       console.log("Registration failed. Please try again");
-  //       toast.error("Registration failed. Please try again");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Error connecting to server");
-  //     console.error("Signup Error:", error);
-  //   }
-  // };
-  //Address Registration functionality
-
   const [newAddress, setNewAddress] = useState<Address>({
+    id: 0,
     type: "",
     full_name: "",
+    mobile: "",
     address: "",
     cityName: "0",
     postal_code: "",
@@ -444,8 +336,10 @@ const MyAccountPage = () => {
           console.log("Address saved!");
 
           setNewAddress({
+            id: 0,
             type: "",
             full_name: "",
+            mobile: "",
             address: "",
             cityName: "",
             postal_code: "",
@@ -453,7 +347,7 @@ const MyAccountPage = () => {
           });
           setShowAddressForm(false);
           loadAddresses();
-
+          renderAddresses();
         } else {
           console.log(json.message);
           toast.error(json.message);
@@ -571,6 +465,18 @@ const MyAccountPage = () => {
                   required
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">Mobile Number</label>
+                <input
+                  type="tel"
+                  value={newAddress.mobile}
+                  onChange={(e) => setNewAddress({ ...newAddress, mobile: e.target.value })}
+                  placeholder="Enter mobile number"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -615,17 +521,18 @@ const MyAccountPage = () => {
                 )}
               </div>
               <button
-                // onClick={() => handleDeleteAddress(address.id)}
+                onClick={() => handleDeleteAddress(address.id)}
                 className="text-red-500 hover:text-red-700"
               >
                 <X size={16} />
               </button>
             </div>
             <h4 className="font-medium text-gray-800 mb-1"> {address.full_name} </h4>
+            <p className="text-sm text-gray-600 mb-1">{address.mobile}</p>
             <p className="text-sm text-gray-600 mb-1">{address.address}</p>
             <p className="text-sm text-gray-600">
               {address.city?.name}, {address.postal_code
-}
+              }
             </p>
 
           </div>
@@ -633,6 +540,33 @@ const MyAccountPage = () => {
       </div>
     </div>
   );
+
+  const handleDeleteAddress = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/DeleteAddress?id=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          toast.success("Address deleted successfully!");
+          loadAddresses();
+          renderAddresses();
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("Address deletion failed. Please try again");
+        toast.error("Address deletion failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again" + error);
+      console.error("Address deletion Error:", error);
+    }
+  };
 
   //update Password
 

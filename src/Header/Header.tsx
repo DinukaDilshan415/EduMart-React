@@ -1,7 +1,6 @@
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '../Cart/useCart';
 import { useState } from 'react';
-import { redirect, useNavigate } from 'react-router-dom';
 
 export default function Header() {
 

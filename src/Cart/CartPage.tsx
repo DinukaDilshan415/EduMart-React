@@ -9,6 +9,7 @@ interface CartItemType {
   price: number;
   oldPrice?: number;
   quantity: number;
+  discount: number;
   image: string;
 }
 
@@ -126,9 +127,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ subtotal, onOpenDetails }) 
         </div>
         <p className="text-xs text-gray-500 text-right">(Shipping fees included)</p>
       </div>
-      <button className="cursor-pointer w-full mt-6 bg-lime-500 text-white py-3 rounded-lg font-semibold hover:bg-lime-600 transition-colors">
-        Proceed to checkout
-      </button>
+      <a href={total > 0 ? "/product/cart/checkout" : "#"}>
+        <button className="cursor-pointer w-full mt-6 bg-lime-500 text-white py-3 rounded-lg font-semibold hover:bg-lime-600 transition-colors">
+          Proceed to checkout
+        </button>
+      </a>
       <button
         onClick={onOpenDetails}
         className="flex justify-center cursor-pointer w-full mt-4 bg-white text-lime-600 border border-lime-500 py-2 rounded-lg font-semibold hover:bg-lime-50 transition-colors"
@@ -204,7 +207,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ isOpen, onClose, 
                   <div className="w-1/12">{index + 1}</div>
                   <div className="w-5/12">
                     <p className="font-medium">{item.name}</p>
-                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">-20.00%</span>
+                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">-{item.discount}%</span>
                     <p className="text-sm text-gray-500 mt-1">
                       {item.oldPrice && <span className="line-through">LKR {item.oldPrice}</span>} LKR {item.price} x {item.quantity}
                     </p>
@@ -271,30 +274,30 @@ const CartPage: React.FC = () => {
   //cart item remove
 
   const removeFromCart = async (id: number) => {
-        try {
-          const response = await fetch(`http://localhost:8080/Edumart-Backend/RemoveFromCart?id=${id}`, {
-            method: "GET",
-            credentials: "include"
-          });
-  
-          if (response.ok) {
-            const json = await response.json();
-            if (json.status) {
-              console.log(json.message);
-              toast.success(json.message);
-            } else {
-              console.log(json.message);
-              toast.error(json.message);
-            }
-          } else {
-            console.log("removeFromCart failed. Please try again");
-            toast.error("removeFromCart failed. Please try again");
-          }
-        } catch (error) {
-          toast.error("Internal Server Error. Please try again later");
-          console.error("removeFromCart Error:", error);
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/RemoveFromCart?id=${id}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json.message);
+          toast.success(json.message);
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
         }
-      };
+      } else {
+        console.log("removeFromCart failed. Please try again");
+        toast.error("removeFromCart failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("removeFromCart Error:", error);
+    }
+  };
 
   //cart item remove
 
@@ -322,6 +325,7 @@ const CartPage: React.FC = () => {
               price: item.stock.price.toFixed(2),
               oldPrice: (item.stock.price * 100 / (100 - item.product.discount)).toFixed(2),
               quantity: item.qty,
+              discount: item.product.discount,
               image: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
             }));
 

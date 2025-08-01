@@ -7,6 +7,7 @@ import AdminDashboard from "../Admin/AdminDashboard";
 import SingleProductView from "../Product/SingleProductView";
 import Cart from "../Cart/Cart";
 import Search from "../ProductSearch/Search";
+import CheckOut from "../Checkout/CheckOut";
 
 
 const router = createBrowserRouter([
@@ -41,6 +42,11 @@ const router = createBrowserRouter([
   {
     path: "/product/search",
     Component: Search
+  }
+  ,
+  {
+    path: "/product/cart/checkout",
+    Component: CheckOut
   }
 
 ]);
