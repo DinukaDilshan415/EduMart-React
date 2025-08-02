@@ -388,6 +388,7 @@ const CheckOutPage: React.FC = () => {
                 if (json.status) {
                     toast.success(json.message);
                     console.log(json.message);
+                    window.location.href = "/product/cart";
                 } else {
                     console.log(json.message);
                     toast.error(json.message);
@@ -399,6 +400,66 @@ const CheckOutPage: React.FC = () => {
         } catch (error) {
             toast.error("Error connecting to server");
             console.error("Checkout Error:", error);
+        }
+    };
+
+    window.payhere.onCompleted = function onCompleted(orderId : any) {
+        toast.success("Payment completed. OrderID:" + orderId);
+        checkOut();
+    };
+
+    // Payment window closed
+    window.payhere.onDismissed = function onDismissed() {
+        // Note: Prompt user to pay again or show an error page
+        console.log("Payment dismissed");
+        toast.error("Payment dismissed");
+    };
+
+    // Error occurred
+    window.payhere.onError = function onError(error: any) {
+        // Note: show an error page
+        console.log("Error:" + error);
+        toast.error("Error:" + error);
+    };
+
+    const makePayment = async () => {
+
+        const payload = {
+            deliveryAddress: selectedAddress,
+            isGift: isGift,
+            // Conditionally add giftAddress only if isGift is true
+            ...(isGift && { giftAddress: giftAddress })
+        };
+
+        console.log("Sending to backend:", payload); // Good for debugging!
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/MakePayment", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    // PayHere Process
+                    window.payhere.startPayment(json.payhereJson);
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("Payment failed. Please try again");
+                toast.error("Payment failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Error connecting to server");
+            console.error("Payment Error:", error);
         }
     };
 
@@ -481,7 +542,7 @@ const CheckOutPage: React.FC = () => {
                                         </div>
                                     )}
                                     <div className="flex justify-end pt-4">
-                                        <button onClick={checkOut} className="bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-8 rounded-md transition-colors shadow-sm w-full sm:w-auto">
+                                        <button onClick={makePayment} className="bg-lime-500 hover:bg-lime-600 text-white font-bold py-3 px-8 rounded-md transition-colors shadow-sm w-full sm:w-auto">
                                             Continue
                                         </button>
                                     </div>
