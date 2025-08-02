@@ -42,12 +42,12 @@ let mockBrands = [
     { id: 1, name: 'Global Office' },
 ];
 
-const mockProducts = [
-    { id: 1, name: 'A4 Paper Ream (500 Sheets)', description: 'High-quality A4 paper for printing and copying', sku: 'SCH-PPR-A4-500', sub_category_id: 1, brand_id: 1, stock: 150, price: 5.99, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=A4+Paper' },
-    { id: 2, name: 'Parker Jotter Ballpoint Pen', description: 'Classic ballpoint pen with smooth writing experience', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
-    { id: 3, name: 'Ergonomic Office Chair', description: 'Comfortable office chair with ergonomic design', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
-    { id: 4, name: '12-pack HB Pencils', description: 'Standard HB pencils for general use', sku: 'SCH-PEN-STA-HB', sub_category_id: 4, brand_id: 4, stock: 8, price: 4.50, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pencils' },
-    { id: 5, name: 'Canvas Paint Set (24 Colors)', description: 'Comprehensive paint set with 24 vibrant colors', sku: 'ART-PNT-CNV-24', sub_category_id: 7, brand_id: 5, stock: 0, price: 25.00, discount: 5, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Paint+Set' },
+let mockProducts = [
+    { id: 1, name: 'A4 Paper Ream (500 Sheets)', description: 'High-quality A4 paper for printing and copying', sub_category_id: 1, brand_id: 1, stock: 150, price: 5.99, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=A4+Paper' },
+    // { id: 2, name: 'Parker Jotter Ballpoint Pen', description: 'Classic ballpoint pen with smooth writing experience', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
+    // { id: 3, name: 'Ergonomic Office Chair', description: 'Comfortable office chair with ergonomic design', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
+    // { id: 4, name: '12-pack HB Pencils', description: 'Standard HB pencils for general use', sku: 'SCH-PEN-STA-HB', sub_category_id: 4, brand_id: 4, stock: 8, price: 4.50, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pencils' },
+    // { id: 5, name: 'Canvas Paint Set (24 Colors)', description: 'Comprehensive paint set with 24 vibrant colors', sku: 'ART-PNT-CNV-24', sub_category_id: 7, brand_id: 5, stock: 0, price: 25.00, discount: 5, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Paint+Set' },
 ];
 
 const mockOrders = [{ id: 'ORD-2024-001', customerName: 'John Doe', date: '2024-07-20', total: 49.99, status: 'Shipped' }, { id: 'ORD-2024-002', customerName: 'Jane Smith', date: '2024-07-19', total: 125.50, status: 'Delivered' }, { id: 'ORD-2024-003', customerName: 'Peter Jones', date: '2024-07-19', total: 12.00, status: 'Pending' }, { id: 'ORD-2024-004', customerName: 'Mary Johnson', date: '2024-07-18', total: 250.00, status: 'Cancelled' }];
@@ -201,7 +201,36 @@ const DashboardPage: FC = () => (
 
 const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
     const [products, setProducts] = useState(mockProducts);
-    const toggleStatus = (id: number) => setProducts(products.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    const toggleStatus = async (id: number) => {
+        setProducts(products.map(p => p.id === id ? { ...p, active: !p.active } : p));
+
+        const updateData = {
+            productId: id,
+        };
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/ToggleProductStatus", {
+                method: "PUT",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updateData)
+            });
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    toast.success("Product Status Updated !");
+                    loadAllProducts();
+                } else {
+                    toast.error(json.message);
+                }
+            } else {
+                toast.error("ToggleProductStatus failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Something wrong ! Please try again");
+            console.error("ToggleProductStatus Error:", error);
+        }
+    };
+
 
     const getCategoryPath = (subCategoryId: number) => {
         const subCat = mockSubCategories.find(sc => sc.id === subCategoryId);
@@ -212,6 +241,55 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
         if (!mainCat) return `${cat.name} > ${subCat.name}`;
         return `${mainCat.name} > ${cat.name} > ${subCat.name}`;
     };
+
+    useEffect(() => {
+        loadAllProducts();
+    }, []);
+
+    //load All Products
+
+    const loadAllProducts = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadAllProducts`, {
+                method: "GET",
+                credentials: "include"
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    console.log(json);
+
+                    mockProducts = json.stockList.map((item: any) => ({
+                        id: item.product.id,
+                        name: item.product.title,
+                        description: item.product.description,
+                        sub_category_id: item.product.subCategory.id,
+                        brand_id: item.product.brand.id,
+                        stock: item.qty,
+                        price: item.price,
+                        discount: item.product.discount,
+                        active: item.product.status.id == 1 ? true : false,
+                        imageUrl: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
+                    }));
+
+                    setProducts(mockProducts);
+
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("loadAllProducts failed. Please try again");
+                toast.error("loadAllProducts failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Internal Server Error. Please try again later");
+            console.error("loadAllProducts Error:", error);
+        }
+    };
+
+    //load All Products
 
     return (
         <Card>
@@ -227,7 +305,7 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
                             <tr key={product.id} className="border-b hover:bg-gray-50">
                                 <td className="p-3"><div className="flex items-center gap-4"><img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-md object-cover" /><span className="font-medium text-gray-800">{product.name}</span></div></td>
                                 <td className="p-3 text-gray-600 text-xs">{getCategoryPath(product.sub_category_id)}</td>
-                                <td className="p-3 text-center text-gray-600">{product.stock}</td><td className="p-3 text-right font-medium text-gray-800">${product.price.toFixed(2)}</td>
+                                <td className="p-3 text-center text-gray-600">{product.stock}</td><td className="p-3 text-right font-medium text-gray-800">LKR {product.price.toFixed(2)}</td>
                                 <td className="p-3 text-center"><Badge color={product.active ? 'green' : 'red'}>{product.active ? 'Active' : 'Inactive'}</Badge></td>
                                 <td className="p-3"><div className="flex justify-center items-center space-x-2"><button onClick={() => toggleStatus(product.id)} className={classNames("p-2 rounded-full hover:bg-gray-200", product.active ? 'text-green-500' : 'text-red-500')}>{product.active ? Icons.toggleOn : Icons.toggleOff}</button><button onClick={() => setView('products/edit', { id: product.id })} className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td>
                             </tr>
@@ -698,7 +776,7 @@ const InventoryPage: FC = () => {
     return (
         <Card>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Inventory Management</h2>
-            <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Product</th><th className="p-3 font-semibold">SKU</th><th className="p-3 font-semibold text-center">Stock Level</th><th className="p-3 font-semibold text-center">Status</th></tr></thead><tbody>{mockProducts.map(product => (<tr key={product.id} className="border-b hover:bg-gray-50"><td className="p-3"><div className="flex items-center gap-4"><img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-md object-cover" /><span className="font-medium text-gray-800">{product.name}</span></div></td><td className="p-3 text-gray-600">{product.sku}</td><td className="p-3 text-center font-bold text-lg">{product.stock}</td><td className="p-3 text-center">{getStockStatus(product.stock)}</td></tr>))}</tbody></table></div>
+            <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Product</th><th className="p-3 font-semibold text-center">Stock Level</th><th className="p-3 font-semibold text-center">Status</th></tr></thead><tbody>{mockProducts.map(product => (<tr key={product.id} className="border-b hover:bg-gray-50"><td className="p-3"><div className="flex items-center gap-4"><img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-md object-cover" /><span className="font-medium text-gray-800">{product.name}</span></div></td><td className="p-3 text-center font-bold text-lg">{product.stock}</td><td className="p-3 text-center">{getStockStatus(product.stock)}</td></tr>))}</tbody></table></div>
         </Card>
     );
 };

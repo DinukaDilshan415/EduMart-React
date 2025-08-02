@@ -13,7 +13,9 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import ConfirmToast from '../Components/ConfirmToast';
+import { format } from 'date-fns';
+
+// --- INTERFACES ---
 
 interface AccountData {
   username: string;
@@ -42,103 +44,413 @@ type Address = {
   id: number;
   type: string;
   full_name: string;
-  mobile: string; // Added this line
+  mobile: string;
   address: string;
   cityName: string;
   postal_code: string;
   isDefault: boolean;
-  city?: City; // Optional for displaying city name
+  city?: City;
 };
 
+type OrderStatus = 'Paid' | 'Pending' | 'Processing' | 'Shipped' | 'Delivered';
+
+interface Order {
+  id: string;
+  date: string;
+  status: OrderStatus;
+  total: string;
+  items: number;
+}
+
+interface OrderItem {
+  id: number;
+  productName: string;
+  brand: string;
+  quantity: number;
+  price: string;
+  imageUrl: string;
+}
+
+interface InvoiceItemsEntry {
+  orderId: string;
+  itemsCount: number;
+  invoiceItemses: any[];
+}
+
+// --- INLINE CONFIRM TOAST COMPONENT ---
+const ConfirmToast = ({ message, onConfirm, toastId }: { message: string, onConfirm: () => void, toastId: string }) => {
+  const handleConfirm = () => {
+    onConfirm();
+    toast.dismiss(toastId);
+  };
+
+  const handleCancel = () => {
+    toast.dismiss(toastId);
+  };
+
+  return (
+    <div className="p-2">
+      <p className="mb-3 text-gray-700">{message}</p>
+      <div className="flex gap-2">
+        <button
+          onClick={handleConfirm}
+          className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-red-700 transition-colors"
+        >
+          Confirm
+        </button>
+        <button
+          onClick={handleCancel}
+          className="bg-gray-300 text-gray-800 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-400 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
 const MyAccountPage = () => {
+  // --- STATE MANAGEMENT ---
   const [activeSection, setActiveSection] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [showOrderDetailsModal, setShowOrderDetailsModal] = useState(false);
+  const [invoiceItemsList, setInvoiceItemsList] = useState<InvoiceItemsEntry[]>([]);
 
-  // set account data
   const [accountData, setAccountData] = useState<AccountData>({
-    username: '',
-    email: '',
-    mobile: '',
-    created_at: ''
+    username: '', email: '', mobile: '', created_at: ''
   });
 
-  const fetchAccountData = async () => {
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    username: '', mobile: ''
+  });
 
+  const [password, setPassword] = useState<UserPassword>({
+    currentPassword: '', newPassword: '', confirmPassword: ''
+  });
+
+  const [cities, setCities] = useState<City[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [newAddress, setNewAddress] = useState<Address>({
+    id: 0, type: "", full_name: "", mobile: "", address: "", cityName: "0", postal_code: "", isDefault: false,
+  });
+
+  const [orders, setOrders] = useState<Order[]>([
+    { id: '#ORD001', date: '2024-07-15', status: 'Delivered', total: '$129.99', items: 3 },
+    { id: '#ORD002', date: '2024-07-10', status: 'Shipped', total: '$89.50', items: 2 },
+    { id: '#ORD003', date: '2024-07-05', status: 'Processing', total: '$199.99', items: 4 },
+    { id: '#ORD004', date: '2024-07-01', status: 'Paid', total: '$45.00', items: 1 },
+    { id: '#ORD005', date: '2024-06-30', status: 'Pending', total: '$59.99', items: 1 },
+  ]);
+  const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItem[]>([]);
+  const [isLoadingOrderItems, setIsLoadingOrderItems] = useState(false);
+
+
+  // --- API & DATA FETCHING ---
+
+  const fetchAccountData = async () => {
     try {
       const response = await fetch("http://localhost:8080/Edumart-Backend/SetAccountData", {
-        method: "GET",
-        credentials: "include",
+        method: "GET", credentials: "include",
       });
-
       if (response.ok) {
         const json = await response.json();
         if (json.status) {
           setAccountData(json);
           setUserProfile(json);
         } else {
-          console.log(json.message);
           toast.error(json.message);
         }
       } else {
-        console.log("Data load failed. Please try again");
         toast.error("Data load failed. Please try again");
       }
     } catch (error) {
-      toast.error("Something wrong ! Please try again" + error);
+      toast.error("Something wrong! Please try again");
       console.error("Data load Error:", error);
+    }
+  };
+
+  const loadCityData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/LoadCityData", {
+        method: "GET", credentials: "include",
+      });
+      if (response.ok) {
+        const json = await response.json();
+        setCities(json);
+      } else {
+        toast.error("City data load failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong! Please try again");
+      console.error("City data load Error:", error);
+    }
+  };
+
+  const loadAddresses = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
+        method: "GET", credentials: "include",
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.addreassList) {
+          setAddresses(json.addreassList as Address[]);
+        } else {
+          setAddresses([]);
+        }
+      } else {
+        toast.error("Failed to load addresses");
+      }
+    } catch (error) {
+      toast.error("Error connecting to server for get addresses");
+      console.error("Address Load Error:", error);
     }
   };
 
   useEffect(() => {
     fetchAccountData();
+    loadCityData();
+    loadAddresses();
+    loadOrders();
   }, []);
 
-  // set account data
+  //load Orders
 
-  const [cities, setCities] = useState<City[]>([]);
-
-  const loadCityData = async () => {
-
+  const loadOrders = async () => {
     try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/LoadCityData", {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadUserOrders`, {
         method: "GET",
-        credentials: "include",
+        credentials: "include"
       });
 
       if (response.ok) {
         const json = await response.json();
+        if (json.status) {
+          console.log(json);
 
-        setCities(json); // Store city data in state
+          const orders = json.invoiceList.map((item: any) => {
+            const matchingInvoiceItem = json.invoiceItemsList.find(
+              (invItem: any) => invItem.orderId === item.order_id
+            );
 
+            return {
+              id: item.order_id,
+              date: format(new Date(item.created_at), 'yyyy-MM-dd'),
+              status: item.orderStatus.value,
+              total: `LKR ${item.amount}.00`,
+              items: matchingInvoiceItem ? matchingInvoiceItem.itemsCount : 0
+            };
+          });
+
+          setOrders(orders);
+
+          setInvoiceItemsList(json.invoiceItemsList);
+
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
       } else {
-        console.log("City data load failed. Please try again");
-        toast.error("City data load failed. Please try again");
+        console.log("loadOrders failed. Please try again");
+        toast.error("loadOrders failed. Please try again");
       }
     } catch (error) {
-      toast.error("Something wrong ! Please try again" + error);
-      console.error("City data load Error:", error);
+      toast.error("Internal Server Error. Please try again later");
+      console.error("loadOrders Error:", error);
     }
   };
 
-  useEffect(() => {
-    loadCityData();
-    loadAddresses();
-  }, []);
+  //load Orders
 
-  // load city data
+  const fetchOrderDetails = async (orderId: string) => {
 
-  const [orders] = useState([
-    { id: '#ORD001', date: '2024-07-15', status: 'Delivered', total: '$129.99', items: 3 },
-    { id: '#ORD002', date: '2024-07-10', status: 'Shipped', total: '$89.50', items: 2 },
-    { id: '#ORD003', date: '2024-07-05', status: 'Processing', total: '$199.99', items: 4 },
-    { id: '#ORD004', date: '2024-06-30', status: 'Delivered', total: '$59.99', items: 1 },
-  ]);
+    setIsLoadingOrderItems(true);
+    setShowOrderDetailsModal(true);
+
+    await new Promise(resolve => setTimeout(resolve, 1)); // simulate async delay
+
+    const matchedOrder = invoiceItemsList.find(order => {
+      return order.orderId === orderId;
+    });
+
+    const items = matchedOrder
+      ? matchedOrder.invoiceItemses.map((item: any) => ({
+        id: item.id,
+        productName: item.stock.product.title,
+        brand: item.stock.product.brand.name,
+        quantity: item.qty,
+        price: `LKR ${item.stock.price}.00`,
+        imageUrl: `http://localhost:8080/Edumart-Backend/product-images/${item.stock.product.id}/image1.png`,
+      }))
+      : [];
+
+    setSelectedOrderItems(items);
+    setIsLoadingOrderItems(false);
+  };
+
+
+  // --- HANDLERS ---
+
+  const updateProfile = async () => {
+    const updateData = {
+      username: userProfile.username,
+      mobile: userProfile.mobile,
+    };
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateUserProfile", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData)
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          toast.success("Profile updated successfully!");
+          fetchAccountData();
+        } else {
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("Profile update failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("Profile update Error:", error);
+    }
+  };
+
+  const saveNewAddress = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAddress)
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          toast.success("Address saved!");
+          setNewAddress({ id: 0, type: "", full_name: "", mobile: "", address: "", cityName: "0", postal_code: "", isDefault: false });
+          setShowAddressForm(false);
+          loadAddresses();
+        } else {
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("Address Registration failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Error connecting to server");
+      console.error("Address Registration Error:", error);
+    }
+  };
+
+  const handleDeleteAddress = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/DeleteAddress?id=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          toast.success("Address deleted successfully!");
+          loadAddresses();
+        } else {
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("Address deletion failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("Address deletion Error:", error);
+    }
+  };
+
+  const updatePassword = async () => {
+    const updateData = {
+      currentPassword: password.currentPassword,
+      newPassword: password.newPassword,
+      confirmPassword: password.confirmPassword
+    };
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateUserPassword", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData)
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          toast.success("Password updated successfully!");
+          setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } else {
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("Password update failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("Password update Error:", error);
+    }
+  };
+
+  const logOutFromAccount = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/Edumart-Backend/SignOut", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          window.location.href = "/login";
+        } else {
+          toast.error(json.message);
+        }
+      } else {
+        toast.error("Log out failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Something wrong ! Please try again");
+      console.error("Log out Error:", error);
+    }
+  };
+
+  const showLogoutConfirm = () => {
+    const toastId = "custom-confirm";
+    toast(
+      <ConfirmToast
+        message="Are you sure you want to Log out?"
+        onConfirm={logOutFromAccount}
+        toastId={toastId}
+      />,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        toastId: toastId,
+        style: { width: "340px" },
+      }
+    );
+  };
+
+  const handleMenuClick = (id: string) => setActiveSection(id);
+
+  // --- UI & RENDER FUNCTIONS ---
 
   const menuItems = [
-    { id: 'account', label: 'Account Information', icon: User, active: true },
+    { id: 'account', label: 'Account Information', icon: User },
     { id: 'profile', label: 'Update Profile', icon: Edit },
     { id: 'orders', label: 'Orders', icon: Package },
     { id: 'address', label: 'Address', icon: MapPin },
@@ -146,11 +458,13 @@ const MyAccountPage = () => {
     { id: 'logout', label: 'Logout', icon: LogOut }
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case 'Delivered': return 'text-green-600 bg-green-100';
-      case 'Shipped': return 'text-blue-600 bg-blue-100';
-      case 'Processing': return 'text-yellow-600 bg-yellow-100';
+      case 'Delivered': return 'text-green-700 bg-green-100';
+      case 'Shipped': return 'text-blue-700 bg-blue-100';
+      case 'Processing': return 'text-yellow-700 bg-yellow-100';
+      case 'Paid': return 'text-indigo-700 bg-indigo-100';
+      case 'Pending': return 'text-gray-700 bg-gray-200';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -179,53 +493,6 @@ const MyAccountPage = () => {
     </div>
   );
 
-  //update profile
-
-  // user profile data
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    username: '',
-    mobile: '',
-  });
-
-  const updateProfile = async () => {
-    const updateData = {
-      username: userProfile.username,
-      mobile: userProfile.mobile,
-    };
-
-    try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateUserProfile", {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-          console.log(json);
-          toast.success("Profile updated successfully!");
-          // render profile section
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("Profile update failed. Please try again");
-        toast.error("Profile update failed. Please try again");
-      }
-    } catch (error) {
-      toast.error("Something wrong ! Please try again");
-      console.error("Profile update Error:", error);
-    }
-  };
-
-
-  //update profile
-
   const renderUpdateProfile = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Update Profile</h2>
@@ -237,7 +504,6 @@ const MyAccountPage = () => {
               type="text"
               value={userProfile.username}
               onChange={(e) => setUserProfile({ ...userProfile, username: e.target.value })}
-
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
@@ -284,14 +550,17 @@ const MyAccountPage = () => {
                 <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.id}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{order.date}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                     {order.status}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">{order.items}</td>
                 <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.total}</td>
                 <td className="px-4 py-3">
-                  <button className="text-green-600 hover:text-green-800 text-sm font-medium">
+                  <button
+                    onClick={() => fetchOrderDetails(order.id)}
+                    className="text-green-600 hover:text-green-800 text-sm font-medium cursor-pointer"
+                  >
                     View Details
                   </button>
                 </td>
@@ -302,95 +571,6 @@ const MyAccountPage = () => {
       </div>
     </div>
   );
-
-  const [newAddress, setNewAddress] = useState<Address>({
-    id: 0,
-    type: "",
-    full_name: "",
-    mobile: "",
-    address: "",
-    cityName: "0",
-    postal_code: "",
-    isDefault: false,
-  });
-
-  const [addresses, setAddresses] = useState<Address[]>([]);
-
-  const saveNewAddress = async () => {
-
-    try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(newAddress)
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-
-          toast.success("Address saved!");
-          console.log("Address saved!");
-
-          setNewAddress({
-            id: 0,
-            type: "",
-            full_name: "",
-            mobile: "",
-            address: "",
-            cityName: "",
-            postal_code: "",
-            isDefault: false,
-          });
-          setShowAddressForm(false);
-          loadAddresses();
-          renderAddresses();
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("Address Registration failed. Please try again");
-        toast.error("Address Registration failed. Please try again");
-      }
-    } catch (error) {
-      toast.error("Error connecting to server");
-      console.error("Address Registration Error:", error);
-    }
-  };
-
-  const loadAddresses = async () => {
-
-    try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewAddress", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-
-        if (json.addreassList) {
-          setAddresses(json.addreassList as Address[]);
-          console.log("Addresses loaded successfully:", json.addreassList);
-        } else {
-          toast.warning("No addresses found.");
-          setAddresses([]);
-        }
-      } else {
-        console.log("Failed to load addresses");
-        toast.error("Failed to load addresses");
-      }
-    } catch (error) {
-      toast.error("Error connecting to server for get addresses");
-      console.error("Address Load Error:", error);
-    }
-  };
-
-  // renderr
 
   const renderAddresses = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -454,7 +634,6 @@ const MyAccountPage = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Postal Code</label>
                 <input
@@ -465,7 +644,6 @@ const MyAccountPage = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">Mobile Number</label>
                 <input
@@ -531,100 +709,17 @@ const MyAccountPage = () => {
             <p className="text-sm text-gray-600 mb-1">{address.mobile}</p>
             <p className="text-sm text-gray-600 mb-1">{address.address}</p>
             <p className="text-sm text-gray-600">
-              {address.city?.name}, {address.postal_code
-              }
+              {address.city?.name}, {address.postal_code}
             </p>
-
           </div>
         ))}
       </div>
     </div>
   );
 
-  const handleDeleteAddress = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:8080/Edumart-Backend/DeleteAddress?id=${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-          toast.success("Address deleted successfully!");
-          loadAddresses();
-          renderAddresses();
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("Address deletion failed. Please try again");
-        toast.error("Address deletion failed. Please try again");
-      }
-    } catch (error) {
-      toast.error("Something wrong ! Please try again" + error);
-      console.error("Address deletion Error:", error);
-    }
-  };
-
-  //update Password
-
-  // Password data
-  const [password, setPassword] = useState<UserPassword>({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const updatePassword = async () => {
-
-    const updateData = {
-      currentPassword: password.currentPassword,
-      newPassword: password.newPassword,
-      confirmPassword: password.confirmPassword
-    };
-
-    try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateUserPassword", {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-          console.log(json);
-          toast.success("Password updated successfully!");
-          // render Password section or reset fields
-          setPassword(prev => ({ ...prev, currentPassword: '' }));
-          setPassword(prev => ({ ...prev, newPassword: '' }));
-          setPassword(prev => ({ ...prev, confirmPassword: '' }));
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("Password update failed. Please try again");
-        toast.error("Password update failed. Please try again");
-      }
-    } catch (error) {
-      toast.error("Something wrong ! Please try again");
-      console.error("Password update Error:", error);
-    }
-  };
-
-
-  //update Password
-
   const renderPasswordChange = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Change Password</h2>
-
       <div className="space-y-4 max-w-md">
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">Current Password</label>
@@ -687,64 +782,9 @@ const MyAccountPage = () => {
           <Lock size={16} />
           Change Password
         </button>
-
       </div>
     </div>
   );
-
-  //Log out function
-
-  const logOutFromAccount = async () => {
-    // if (confirm('Are you sure you want to logout?')) {
-    try {
-      const response = await fetch("http://localhost:8080/Edumart-Backend/SignOut", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.status) {
-          window.location.href = "/login";
-
-        } else {
-          console.log(json.message);
-          toast.error(json.message);
-        }
-      } else {
-        console.log("Log out failed. Please try again");
-        toast.error("Log out failed. Please try again");
-      }
-    } catch (error) {
-      toast.error("Something wrong ! Please try again" + error);
-      console.error("Log out Error:", error);
-    }
-    // }
-  };
-
-  //confirmation
-
-  const showLogoutConfirm = () => {
-    toast(
-      <ConfirmToast
-        message="Are you sure you want to Log out"
-        onConfirm={logOutFromAccount}
-      />,
-      {
-        position: "top-center",
-        autoClose: false,
-        closeOnClick: false,
-        closeButton: false,
-        toastId: "custom-confirm",
-        style: { width: "340px" },
-      }
-    );
-  };
-
-  //confirmation
-
-
-  //Log out function
 
   const renderLogOut = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -758,13 +798,74 @@ const MyAccountPage = () => {
     </div>
   );
 
-  const handleMenuClick = (id: string) => {
-    if (id === 'logout') {
-      setActiveSection(id);
-    } else {
-      setActiveSection(id);
-    }
-  };
+  // UPDATED: OrderDetailsModal to display images
+  const OrderDetailsModal = () => (
+    <div
+      className={`fixed inset-0 backdrop-blur-xs shadow-2xl bg-black/30 bg-opacity-50 flex justify-center items-center z-50 transition-all duration-300 ease-in-out ${showOrderDetailsModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      onClick={() => setShowOrderDetailsModal(false)}
+    >
+      <div
+        className={`bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 p-6 transform transition-all duration-300 ${showOrderDetailsModal ? 'scale-100' : 'scale-95'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Order Items</h3>
+          <button
+            onClick={() => setShowOrderDetailsModal(false)}
+            className="text-gray-500 hover:text-gray-800"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        {isLoadingOrderItems ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600">Loading items...</p>
+          </div>
+        ) : (
+          <div className="overflow-y-auto max-h-[60vh]">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left text-sm font-medium text-gray-600">
+                  <th className="p-3 w-20">Image</th>
+                  <th className="p-3">Product Name</th>
+                  <th className="p-3">Brand</th>
+                  <th className="p-3 text-center">Qty</th>
+                  <th className="p-3 text-right">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrderItems.length > 0 ? (
+                  selectedOrderItems.map(item => (
+                    <tr key={item.id} className="border-b">
+                      <td className="p-2">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.productName}
+                          className="w-16 h-16 object-cover rounded-md"
+                          onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/4a5568?text=N/A'; }}
+                        />
+                      </td>
+                      <td className="p-3 font-medium text-gray-800">{item.productName}</td>
+                      <td className="p-3 text-gray-600">{item.brand}</td>
+                      <td className="p-3 text-center text-gray-600">{item.quantity}</td>
+                      <td className="p-3 text-right font-medium text-gray-800">{item.price}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center p-6 text-gray-500">
+                      No items found for this order.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
 
   const renderContent = () => {
     switch (activeSection) {
@@ -781,11 +882,10 @@ const MyAccountPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 mt-20">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-              T
+              {accountData.username ? accountData.username.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{accountData.username}</h1>
@@ -795,7 +895,6 @@ const MyAccountPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-4">
               <nav className="space-y-2">
@@ -819,12 +918,13 @@ const MyAccountPage = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             {renderContent()}
           </div>
         </div>
       </div>
+
+      <OrderDetailsModal />
     </div>
   );
 };
