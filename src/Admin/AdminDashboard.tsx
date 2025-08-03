@@ -5,6 +5,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { LogOut } from 'lucide-react';
 
 // Helper function to conditionally apply class names
 const classNames = (...classes: (string | boolean | undefined)[]) => {
@@ -179,9 +180,89 @@ const Sidebar: FC<SidebarProps> = ({ currentView, setView }) => {
     );
 };
 
+// --- INLINE CONFIRM TOAST COMPONENT ---
+const ConfirmToast = ({ message, onConfirm, toastId }: { message: string, onConfirm: () => void, toastId: string }) => {
+    const handleConfirm = () => {
+        onConfirm();
+        toast.dismiss(toastId);
+    };
+
+    const handleCancel = () => {
+        toast.dismiss(toastId);
+    };
+
+    return (
+        <div className="p-2">
+            <p className="mb-3 text-gray-700">{message}</p>
+            <div className="flex gap-2">
+                <button
+                    onClick={handleConfirm}
+                    className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-red-700 transition-colors"
+                >
+                    Confirm
+                </button>
+                <button
+                    onClick={handleCancel}
+                    className="bg-gray-300 text-gray-800 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-400 transition-colors"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const showLogoutConfirm = () => {
+    const toastId = "custom-confirm";
+    toast(
+        <ConfirmToast
+            message="Are you sure you want to Log out?"
+            onConfirm={logOutFromAccount}
+            toastId={toastId}
+        />,
+        {
+            position: "top-center",
+            autoClose: false,
+            closeOnClick: false,
+            closeButton: false,
+            toastId: toastId,
+            style: { width: "340px" },
+        }
+    );
+};
+
+const logOutFromAccount = async () => {
+    try {
+        const response = await fetch("http://localhost:8080/Edumart-Backend/AdminSignOut", {
+            method: "GET",
+            credentials: "include",
+        });
+        if (response.ok) {
+            const json = await response.json();
+            if (json.status) {
+                window.location.href = "/admin/login";
+            } else {
+                toast.error(json.message);
+            }
+        } else {
+            toast.error("Log out failed. Please try again");
+        }
+    } catch (error) {
+        toast.error("Something wrong ! Please try again");
+        console.error("Log out Error:", error);
+    }
+};
+
 const Header: FC<{}> = () => (
     <header className="flex items-center justify-between p-4 bg-white border-b h-16 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-800">Welcome back, Admin!</h2>
+        <button onClick={showLogoutConfirm}
+            type="submit"
+            className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200 flex items-center gap-2 cursor-pointer"
+        >
+            <LogOut size={16} />
+            Log Out
+        </button>
     </header>
 );
 

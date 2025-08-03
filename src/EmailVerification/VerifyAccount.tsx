@@ -44,33 +44,6 @@ const VerifyAccount = () => {
     }
   };
 
-  //resend email
-  // const reSendEmail = async () => {
-  //   try {
-  //     const response = await fetch("http://127.0.0.1:8080/Edumart-Backend/ReSendVerification");
-
-  //     if (response.ok) {
-  //       const json = await response.json();
-
-  //       if (json.status) {
-  //         //email send successfully   
-
-  //         console.log(json);
-  //         console.log("New Verification Code Send");
-  //       } else {
-  //         console.log(json.message);
-  //         toast.error(json.message);
-  //       }
-  //     } else {
-  //       console.log("Verification Code Send failed. Please try again");
-  //       toast.error("Verification Code Send failed. Please try again");
-  //     }
-  //   } catch (error) {
-  //     toast.error("Something Wrong ! Please try again");
-  //     console.error("Verification Code Send Error:", error);
-  //   }
-  // };
-
   const reSendEmail = async () => {
   // Use toast.promise to handle loading, success, and error alerts
   toast.promise(

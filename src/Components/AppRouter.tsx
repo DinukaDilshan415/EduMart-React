@@ -8,12 +8,22 @@ import SingleProductView from "../Product/SingleProductView";
 import Cart from "../Cart/Cart";
 import Search from "../ProductSearch/Search";
 import CheckOut from "../Checkout/CheckOut";
+import GuestRoute from "../SessionCheck/GuestRoute";
+import ProtectedRoute from "../SessionCheck/ProtectedRoute";
+import AdminLoginPage from "../Admin/AdminLoginPage";
+import AdminVerificationPage from "../Admin/AdminVerificationPage";
+import AdminProtectedRoute from "../SessionCheck/AdminProtectedRoute";
+import AdminGuestRoute from "../SessionCheck/AdminGuestRoute";
 
 
 const router = createBrowserRouter([
   {
     path: "/login",
-    Component: Login
+    element: (
+      <GuestRoute>
+        <Login />
+      </GuestRoute>
+    ),
   },
   {
     path: "/",
@@ -25,11 +35,32 @@ const router = createBrowserRouter([
   },
   {
     path: "/home/myaccount",
-    Component: MyAccount
+    element: (
+      <ProtectedRoute>
+        <MyAccount />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin/dashboard",
-    Component: AdminDashboard
+    element: (
+      <AdminProtectedRoute>
+        <AdminDashboard />
+      </AdminProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/login",
+    element: (
+      <AdminGuestRoute>
+      <AdminLoginPage />
+      </AdminGuestRoute>
+    ),
+  }, {
+    path: "/admin/verification",
+    element: (
+      <AdminVerificationPage />
+    ),
   },
   {
     path: "/singleproduct",
@@ -46,7 +77,11 @@ const router = createBrowserRouter([
   ,
   {
     path: "/product/cart/checkout",
-    Component: CheckOut
+    element: (
+      <ProtectedRoute>
+        <CheckOut />
+      </ProtectedRoute>
+    ),
   }
 
 ]);
