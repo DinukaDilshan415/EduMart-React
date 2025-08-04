@@ -12,6 +12,46 @@ const classNames = (...classes: (string | boolean | undefined)[]) => {
     return classes.filter(Boolean).join(' ');
 };
 
+// --- TYPE DEFINITIONS ---
+type Address = {
+    fullName: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    mobile: string;
+};
+
+type GiftAddress = {
+    fullName: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    note: string;
+};
+
+type OrderItem = {
+    productId: number;
+    productName: string;
+    productImageUrl: string;
+    brandName: string;
+    qty: number;
+    price: number;
+};
+
+type OrderDetails = {
+    billingAddress: Address;
+    giftAddress: GiftAddress | null;
+    items: OrderItem[];
+};
+
+type Order = {
+    id: string;
+    customerName: string;
+    date: string;
+    total: number;
+    status: 'Paid' | 'Pending' | 'Processing' | 'Shipped' | 'Delivered';
+};
+
 type ProductData = {
     name: string;
     description: string;
@@ -25,8 +65,7 @@ type ProductData = {
     subCategory: string;
 };
 
-// --- MOCK DATA (Updated based on ER Diagram) ---
-
+// --- MOCK DATA ---
 let mockMainCategories = [
     { id: 1, name: 'School Supplies' },
 ];
@@ -41,23 +80,111 @@ let mockSubCategories = [
 
 let mockBrands = [
     { id: 1, name: 'Global Office' },
+    { id: 2, name: 'Parker' },
+    { id: 3, name: 'ComfortZone' },
 ];
 
 let mockProducts = [
     { id: 1, name: 'A4 Paper Ream (500 Sheets)', description: 'High-quality A4 paper for printing and copying', sub_category_id: 1, brand_id: 1, stock: 150, price: 5.99, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=A4+Paper' },
-    // { id: 2, name: 'Parker Jotter Ballpoint Pen', description: 'Classic ballpoint pen with smooth writing experience', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
-    // { id: 3, name: 'Ergonomic Office Chair', description: 'Comfortable office chair with ergonomic design', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
-    // { id: 4, name: '12-pack HB Pencils', description: 'Standard HB pencils for general use', sku: 'SCH-PEN-STA-HB', sub_category_id: 4, brand_id: 4, stock: 8, price: 4.50, discount: 0, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pencils' },
-    // { id: 5, name: 'Canvas Paint Set (24 Colors)', description: 'Comprehensive paint set with 24 vibrant colors', sku: 'ART-PNT-CNV-24', sub_category_id: 7, brand_id: 5, stock: 0, price: 25.00, discount: 5, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Paint+Set' },
+    { id: 2, name: 'Parker Jotter Ballpoint Pen', description: 'Classic ballpoint pen with smooth writing experience', sku: 'OFF-PEN-PRK-JTR', sub_category_id: 3, brand_id: 2, stock: 300, price: 12.50, discount: 10, active: true, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Pen' },
+    { id: 3, name: 'Ergonomic Office Chair', description: 'Comfortable office chair with ergonomic design', sku: 'OFF-FNT-CHR-ERGO', sub_category_id: 5, brand_id: 3, stock: 25, price: 120.00, discount: 15, active: false, imageUrl: 'https://placehold.co/100x100/E2E8F0/4A5568?text=Chair' },
 ];
 
-const mockOrders = [{ id: 'ORD-2024-001', customerName: 'John Doe', date: '2024-07-20', total: 49.99, status: 'Shipped' }, { id: 'ORD-2024-002', customerName: 'Jane Smith', date: '2024-07-19', total: 125.50, status: 'Delivered' }, { id: 'ORD-2024-003', customerName: 'Peter Jones', date: '2024-07-19', total: 12.00, status: 'Pending' }, { id: 'ORD-2024-004', customerName: 'Mary Johnson', date: '2024-07-18', total: 250.00, status: 'Cancelled' }];
+let mockOrders: Order[] = [
+    { id: 'ORD-2024-001', customerName: 'John Doe', date: '2025-08-01', total: 42.45, status: 'Shipped' },
+    { id: 'ORD-2024-002', customerName: 'Jane Smith', date: '2025-07-31', total: 120.00, status: 'Delivered' },
+    { id: 'ORD-2024-003', customerName: 'Peter Jones', date: '2025-07-31', total: 12.50, status: 'Pending' },
+    { id: 'ORD-2024-004', customerName: 'Mary Johnson', date: '2025-07-30', total: 179.90, status: 'Processing' },
+    { id: 'ORD-2024-005', customerName: 'Chris Lee', date: '2025-08-02', total: 62.50, status: 'Paid' }
+];
+
+let mockOrderDetails: { [key: string]: OrderDetails } = {
+    // 'ORD-2024-001': {
+    //     billingAddress: {
+    //         fullName: 'John Doe',
+    //         address: '123 Main St',
+    //         city: 'Gampaha',
+    //         postalCode: '11000',
+    //         mobile: '077-123-4567',
+    //     },
+    //     giftAddress: {
+    //         fullName: 'Jane Smith (Recipient)',
+    //         address: '456 Lake Rd',
+    //         city: 'Colombo',
+    //         postalCode: '00500',
+    //         note: 'Happy Birthday! Hope you like it.'
+    //     },
+    //     items: [
+    //         { productId: 1, qty: 5, price: 5.99 },
+    //         { productId: 2, qty: 1, price: 12.50 },
+    //     ]
+    // },
+    // 'ORD-2024-002': {
+    //     billingAddress: {
+    //         fullName: 'Jane Smith',
+    //         address: '789 Market Blvd',
+    //         city: 'Kandy',
+    //         postalCode: '20000',
+    //         mobile: '071-987-6543'
+    //     },
+    //     giftAddress: null,
+    //     items: [
+    //         { productId: 3, qty: 1, price: 120.00 },
+    //     ]
+    // },
+    // 'ORD-2024-003': {
+    //     billingAddress: {
+    //         fullName: 'Peter Jones',
+    //         address: '101 First Ln',
+    //         city: 'Galle',
+    //         postalCode: '80000',
+    //         mobile: '076-555-0000',
+    //     },
+    //     giftAddress: null,
+    //     items: [
+    //         { productId: 2, qty: 1, price: 12.50 },
+    //     ]
+    // },
+    // 'ORD-2024-004': {
+    //     billingAddress: {
+    //         fullName: 'Mary Johnson',
+    //         address: '222 Flower Rd',
+    //         city: 'Colombo 07',
+    //         postalCode: '00700',
+    //         mobile: '075-111-2222',
+    //     },
+    //     giftAddress: {
+    //         fullName: 'Samwise Gamgee',
+    //         address: '333 Bag End',
+    //         city: 'The Shire',
+    //         postalCode: 'N/A',
+    //         note: 'For your adventures!'
+    //     },
+    //     items: [
+    //         { productId: 1, qty: 10, price: 5.99 },
+    //         { productId: 3, qty: 1, price: 120.00 },
+    //     ]
+    // },
+    // 'ORD-2024-005': {
+    //     billingAddress: {
+    //         fullName: 'Chris Lee',
+    //         address: '555 Tech Way',
+    //         city: 'Jaffna',
+    //         postalCode: '40000',
+    //         mobile: '070-321-6548',
+    //     },
+    //     giftAddress: null,
+    //     items: [
+    //         { productId: 2, qty: 5, price: 12.50 },
+    //     ]
+    // },
+};
+
 const mockCustomers = [{ id: 1, name: 'John Doe', email: 'john.doe@example.com', joinDate: '2023-01-15', orderCount: 5, totalSpent: 450.75 }, { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', joinDate: '2023-02-20', orderCount: 8, totalSpent: 1250.00 }, { id: 3, name: 'Peter Jones', email: 'peter.jones@example.com', joinDate: '2023-05-10', orderCount: 2, totalSpent: 85.20 }];
 const mockReviews = [{ id: 1, productName: 'Parker Jotter Ballpoint Pen', customerName: 'John Doe', rating: 5, comment: 'Excellent pen, writes smoothly and looks very professional. Highly recommended!', date: '2024-07-15', status: 'Approved' }, { id: 2, productName: 'Ergonomic Office Chair', customerName: 'Jane Smith', rating: 3, comment: 'It\'s a decent chair for the price, but the armrests feel a bit flimsy. Assembly was straightforward.', date: '2024-07-12', status: 'Approved' }, { id: 3, productName: 'A4 Paper Ream', customerName: 'Peter Jones', rating: 4, comment: 'Good quality paper, but the packaging was slightly damaged on arrival.', date: '2024-07-10', status: 'Pending' }];
 const mockUsers = [{ id: 1, name: 'Admin User', email: 'admin@edumart.com', role: 'Administrator', lastLogin: '2024-07-21 10:30 AM' }, { id: 2, name: 'Manager Sam', email: 'sam@edumart.com', role: 'Manager', lastLogin: '2024-07-21 09:15 AM' }, { id: 3, name: 'Support Alex', email: 'alex@edumart.com', role: 'Support Staff', lastLogin: '2024-07-20 04:00 PM' }];
 
-
-// --- SVG ICONS (Self-contained to avoid external dependencies) ---
+// --- SVG ICONS ---
 const Icon: FC<{ path: string; className?: string }> = ({ path, className = 'w-6 h-6' }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
@@ -68,7 +195,7 @@ const Icons = {
     dashboard: <Icon path="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
     products: <Icon path="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
     inventory: <Icon path="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />,
-    customers: <Icon path="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.176-5.97m-3.102 5.97a6 6 0 01-2.72-5.197M15 15a4 4 0 100-8 4 4 0 000 8z" />,
+    customers: <Icon path="M8 10a4 4 0 118 0 4 4 0 01-8 0zm6.5 6h-5a6.5 6.5 0 00-6.5 6.5V23h18v-0.5A6.5 6.5 0 0014.5 16zm7.5-9a3 3 0 11-6 0 3 3 0 016 0zm-1 5.5h-4a5.5 5.5 0 00-5.5 5.5V19h13v-1.5a5.5 5.5 0 00-3.5-5zM4 7a3 3 0 116 0 3 3 0 01-6 0zm1 5.5h4a5.5 5.5 0 015.5 5.5V19H1v-1.5a5.5 5.5 0 014-5z" />,
     reviews: <Icon path="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
     orders: <Icon path="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />,
     settings: <Icon path="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />,
@@ -118,7 +245,7 @@ const Badge: FC<{ children: ReactNode; color: 'blue' | 'green' | 'yellow' | 'red
 }
 
 // --- Layout Components ---
-type SetViewFn = (view: string, params?: any) => void;
+type SetViewFn = (view: string, params?: object) => void;
 
 interface SidebarProps {
     currentView: string;
@@ -181,7 +308,7 @@ const Sidebar: FC<SidebarProps> = ({ currentView, setView }) => {
 };
 
 // --- INLINE CONFIRM TOAST COMPONENT ---
-const ConfirmToast = ({ message, onConfirm, toastId }: { message: string, onConfirm: () => void, toastId: string }) => {
+const ConfirmToast = ({ message, onConfirm, toastId }: { message: string, onConfirm: () => void, toastId: string | number }) => {
     const handleConfirm = () => {
         onConfirm();
         toast.dismiss(toastId);
@@ -272,7 +399,7 @@ const DashboardPage: FC = () => (
     <div>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card><h3 className="text-gray-500 font-medium">Total Revenue</h3><p className="text-3xl font-bold text-gray-800 mt-2">$45,231.89</p><p className="text-green-500 text-sm mt-1">+20.1% from last month</p></Card>
+            <Card><h3 className="text-gray-500 font-medium">Total Revenue</h3><p className="text-3xl font-bold text-gray-800 mt-2">LKR 45,231.89</p><p className="text-green-500 text-sm mt-1">+20.1% from last month</p></Card>
             <Card><h3 className="text-gray-500 font-medium">Orders</h3><p className="text-3xl font-bold text-gray-800 mt-2">1,830</p><p className="text-green-500 text-sm mt-1">+5.2% from last month</p></Card>
             <Card><h3 className="text-gray-500 font-medium">Active Products</h3><p className="text-3xl font-bold text-gray-800 mt-2">342</p><p className="text-gray-500 text-sm mt-1">12 inactive</p></Card>
             <Card><h3 className="text-gray-500 font-medium">New Customers</h3><p className="text-3xl font-bold text-gray-800 mt-2">156</p><p className="text-red-500 text-sm mt-1">-2.8% from last month</p></Card>
@@ -328,6 +455,19 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
     }, []);
 
     //load All Products
+    type ApiStockItem = {
+        product: {
+            id: number;
+            title: string;
+            description: string;
+            subCategory: { id: number };
+            brand: { id: number };
+            discount: number;
+            status: { id: number };
+        };
+        qty: number;
+        price: number;
+    };
 
     const loadAllProducts = async () => {
         try {
@@ -339,9 +479,7 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
             if (response.ok) {
                 const json = await response.json();
                 if (json.status) {
-                    console.log(json);
-
-                    mockProducts = json.stockList.map((item: any) => ({
+                    mockProducts = json.stockList.map((item: ApiStockItem) => ({
                         id: item.product.id,
                         name: item.product.title,
                         description: item.product.description,
@@ -350,18 +488,14 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
                         stock: item.qty,
                         price: item.price,
                         discount: item.product.discount,
-                        active: item.product.status.id == 1 ? true : false,
+                        active: item.product.status.id == 1,
                         imageUrl: `http://localhost:8080/Edumart-Backend/product-images/${item.product.id}/image1.png`
                     }));
-
                     setProducts(mockProducts);
-
                 } else {
-                    console.log(json.message);
                     toast.error(json.message);
                 }
             } else {
-                console.log("loadAllProducts failed. Please try again");
                 toast.error("loadAllProducts failed. Please try again");
             }
         } catch (error) {
@@ -369,8 +503,6 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
             console.error("loadAllProducts Error:", error);
         }
     };
-
-    //load All Products
 
     return (
         <Card>
@@ -398,14 +530,13 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
     );
 };
 
-const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, params }) => {
+const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ setView, params }) => {
     const isEditMode = params && params.id;
     const product = isEditMode ? mockProducts.find(p => p.id === params.id) : null;
 
     const [selectedMainCat, setSelectedMainCat] = useState<number | null>(null);
     const [selectedCat, setSelectedCat] = useState<number | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const availableCats = useMemo(() => {
@@ -418,13 +549,6 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
         return mockSubCategories.filter(sc => sc.category_id === selectedCat);
     }, [selectedCat]);
 
-    // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    //     if (event.target.files && event.target.files[0]) {
-    //         const file = event.target.files[0];
-    //         setImagePreview(URL.createObjectURL(file));
-    //     }
-    // };
-
     const handleImageUploadClick = () => {
         fileInputRef.current?.click();
     };
@@ -432,14 +556,9 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
     const displayPrice = () => {
         const priceNum = parseFloat(String(productData.price));
         const discountNum = parseFloat(String(productData.discount));
-
-        if (isNaN(priceNum) || isNaN(discountNum)) return '';
-
+        if (isNaN(priceNum) || isNaN(discountNum) || discountNum >= 100) return '';
         return ((priceNum * 100 / (100 - discountNum))).toFixed(2);
     };
-
-
-    //add new product function 
 
     const [productData, setProductData] = useState<ProductData>({
         name: product?.name || '',
@@ -457,20 +576,17 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setProductData(prev => ({
-                ...prev,
-                image: file // <-- set the image file here
-            }));
+            setProductData(prev => ({ ...prev, image: file }));
             setImagePreview(URL.createObjectURL(file));
         }
     };
 
-
     const saveProduct = async () => {
-        // You can now send productData in fetch / axios
         const formData = new FormData();
         Object.entries(productData).forEach(([key, value]) => {
-            if (value !== null) formData.append(key, value as any);
+            if (value !== null) {
+                formData.append(key, value instanceof File ? value : String(value));
+            }
         });
 
         try {
@@ -483,16 +599,12 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
             if (response.ok) {
                 const json = await response.json();
                 if (json.status) {
-
-                    console.log("New Product added successfully");
                     toast.success("New Product added successfully");
                     setView('products/list');
                 } else {
-                    console.log(json.message);
                     toast.error(json.message);
                 }
             } else {
-                console.log("New Product add failed. Please try again");
                 toast.error("New Product add failed. Please try again");
             }
         } catch (error) {
@@ -501,15 +613,12 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
         }
     };
 
-    //add new product function 
-
-    //Update product function 
-
     const updateProduct = async () => {
-        // You can now send productData in fetch / axios
         const formData = new FormData();
         Object.entries(productData).forEach(([key, value]) => {
-            if (value !== null) formData.append(key, value as any);
+            if (value !== null) {
+                formData.append(key, value instanceof File ? value : String(value));
+            }
         });
 
         try {
@@ -522,37 +631,23 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
             if (response.ok) {
                 const json = await response.json();
                 if (json.status) {
-
-                    console.log("Product Stock Updated successfully");
                     toast.success("Product Stock Updated successfully");
                     setView('products/list');
                 } else {
-                    console.log(json.message);
                     toast.error(json.message);
                 }
             } else {
-                console.log("Product Stock Update failed. Please try again");
                 toast.error("Product Stock Update failed. Please try again");
             }
         } catch (error) {
             toast.error("Internal Server Error. Please try again later");
-            console.error("Product Stock Updat Error:", error);
+            console.error("Product Stock Update Error:", error);
         }
     };
 
-    //Update product function 
-
-    //Stock check function 
-
     const [open, setOpen] = useState(false);
-
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
+    const handleClickOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
 
     const handleProductSave = () => {
         setOpen(false);
@@ -565,12 +660,11 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
     };
 
     const checkProductStock = async () => {
-        console.log(productData);
-
-        // You can now send productData in fetch / axios
         const formData = new FormData();
         Object.entries(productData).forEach(([key, value]) => {
-            if (value !== null) formData.append(key, value as any);
+            if (value !== null) {
+                formData.append(key, value instanceof File ? value : String(value));
+            }
         });
 
         try {
@@ -583,21 +677,15 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
             if (response.ok) {
                 const json = await response.json();
                 if (json.status) {
-
-                    if (json.message == "UpdateProduct") {
-                        console.log("UpdateProduct");
+                    if (json.message === "UpdateProduct") {
                         handleClickOpen();
-                    } else if (json.message == "InsertProduct") {
-                        console.log("InsertProduct");
+                    } else if (json.message === "InsertProduct") {
                         saveProduct();
                     }
-
                 } else {
-                    console.log(json);
                     toast.error(json.message);
                 }
             } else {
-                console.log("Stock check failed. Please try again");
                 toast.error("Stock check failed. Please try again");
             }
         } catch (error) {
@@ -605,8 +693,6 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
             console.error("Stock check Error:", error);
         }
     };
-
-    //Stock check function
 
     return (
         <Card>
@@ -616,131 +702,45 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: any }> = ({ setView, par
                     <div className="md:col-span-2 space-y-6">
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Product Name</label>
-                            <input type="text"
-                                value={productData.name}
-                                onChange={(e) => setProductData({ ...productData, name: e.target.value })}
-                                defaultValue={product?.name} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" />
+                            <input type="text" value={productData.name} onChange={(e) => setProductData({ ...productData, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" />
                         </div>
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Description</label>
-                            <textarea rows={5}
-                                value={productData.description}
-                                onChange={(e) => setProductData({ ...productData, description: e.target.value })}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Detailed product description..."></textarea>
+                            <textarea rows={5} value={productData.description} onChange={(e) => setProductData({ ...productData, description: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Detailed product description..."></textarea>
                         </div>
                     </div>
                     <div className="space-y-2">
                         <label className="block text-gray-700 font-medium">Product Image</label>
                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
-                        <div
-                            className="w-60 h-60 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-400 hover:border-blue-500 hover:text-blue-500 cursor-pointer bg-gray-50 overflow-hidden"
-                            onClick={handleImageUploadClick}
-                        >
-                            {imagePreview ? (
-                                <img src={imagePreview} alt="Product Preview" className="h-full w-full object-cover" />
-                            ) : (
-                                <div className="text-center">
-                                    {Icons.upload}
-                                    <p className="mt-2 text-sm">Click to upload</p>
-                                </div>
-                            )}
+                        <div className="w-60 h-60 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-400 hover:border-blue-500 hover:text-blue-500 cursor-pointer bg-gray-50 overflow-hidden" onClick={handleImageUploadClick}>
+                            {imagePreview ? <img src={imagePreview} alt="Product Preview" className="h-full w-full object-cover" /> : <div className="text-center">{Icons.upload}<p className="mt-2 text-sm">Click to upload</p></div>}
                         </div>
                     </div>
                 </div>
-
                 <h3 className="text-lg font-semibold text-gray-700 mt-8 mb-4 border-b pb-2">Categorization</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Main Category</label>
-                        <select onChange={(e) => { setSelectedMainCat(Number(e.target.value)); setSelectedCat(null); }} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                            <option>Select Main Category</option>
-                            {mockMainCategories.map(mc => <option key={mc.id} value={mc.id}>{mc.name}</option>)}
-                        </select>
-                    </div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Category</label>
-                        <select onChange={(e) => setSelectedCat(Number(e.target.value))} disabled={!selectedMainCat} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100">
-                            <option>Select Category</option>
-                            {availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Sub Category</label>
-                        <select disabled={!selectedCat}
-                            value={productData.subCategory}
-                            onChange={(e) => setProductData({ ...productData, subCategory: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100">
-                            <option>Select Sub Category</option>
-                            {availableSubCats.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
-                        </select>
-                    </div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Main Category</label><select onChange={(e) => { setSelectedMainCat(Number(e.target.value)); setSelectedCat(null); }} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>Select Main Category</option>{mockMainCategories.map(mc => <option key={mc.id} value={mc.id}>{mc.name}</option>)}</select></div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Category</label><select onChange={(e) => setSelectedCat(Number(e.target.value))} disabled={!selectedMainCat} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Category</option>{availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Sub Category</label><select disabled={!selectedCat} value={productData.subCategory} onChange={(e) => setProductData({ ...productData, subCategory: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Sub Category</option>{availableSubCats.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}</select></div>
                 </div>
-
                 <h3 className="text-lg font-semibold text-gray-700 mt-8 mb-4 border-b pb-2">Details, Pricing & Stock</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Brand</label>
-                        <select
-                            value={productData.brand_id}
-                            onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })}
-                            defaultValue={product?.brand_id} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                            <option value={0}>Select Brand</option>
-                            {mockBrands.map(b =>
-                                <option key={b.id} value={b.id}>{b.name}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">Stock Quantity</label>
-                        <input type="number"
-                            value={productData.stock}
-                            onChange={(e) => setProductData({ ...productData, stock: e.target.value })}
-                            min="0" defaultValue={product?.stock}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Brand</label><select value={productData.brand_id} onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option value={0}>Select Brand</option>{mockBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Stock Quantity</label><input type="number" value={productData.stock} onChange={(e) => setProductData({ ...productData, stock: e.target.value })} min="0" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">Price (LKR)</label>
-                        <input type="number" value={productData.price}
-                            onChange={(e) => setProductData({ ...productData, price: e.target.value })}
-                            min="0" step="0.01" defaultValue={product?.price}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">Discount (%)</label>
-                        <input type="number"
-                            value={productData.discount}
-                            onChange={(e) => setProductData({ ...productData, discount: e.target.value })}
-                            min="0" max="100" defaultValue={product?.discount}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label>
-                        <input type="number" min="0" step="0.01" value={displayPrice()} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled />
-                    </div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Price (LKR)</label><input type="number" value={productData.price} onChange={(e) => setProductData({ ...productData, price: e.target.value })} min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Discount (%)</label><input type="number" value={productData.discount} onChange={(e) => setProductData({ ...productData, discount: e.target.value })} min="0" max="100" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label><input type="text" value={displayPrice()} className="w-full px-4 py-2 border rounded-lg bg-gray-100" disabled /></div>
                 </div>
-
                 <div className="mt-8 flex justify-end gap-4">
                     <Button className='cursor-pointer' type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button>
                     <Button className='cursor-pointer' onClick={checkProductStock} type="submit">{isEditMode ? 'Update Product' : 'Save Product'}</Button>
                 </div>
-                <Dialog
-                    open={open}
-                    onClose={handleClose}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
-                >
-                    <DialogTitle id="alert-dialog-title">
-                        {"Product Already Exists!"}
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                            Product with the same name, brand, sub-category and Same Price already exists.
-                            Do you want to update the existing product stock or add a new one?
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button className='cursor-pointer' onClick={handleProductSave}>Add As New One</Button>
-                        <Button className='cursor-pointer' onClick={handlProductUpdate} variant="primary">
-                            Update Existing Stock
-                        </Button>
-                    </DialogActions>
+                <Dialog open={open} onClose={handleClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+                    <DialogTitle id="alert-dialog-title">{"Product Already Exists!"}</DialogTitle>
+                    <DialogContent><DialogContentText id="alert-dialog-description">Product with the same name, brand, sub-category and Same Price already exists. Do you want to update the existing product stock or add a new one?</DialogContentText></DialogContent>
+                    <DialogActions><Button className='cursor-pointer' onClick={handleProductSave}>Add As New One</Button><Button className='cursor-pointer' onClick={handlProductUpdate} variant="primary">Update Existing Stock</Button></DialogActions>
                 </Dialog>
             </form>
         </Card>
@@ -763,15 +763,9 @@ const ManageCategories: FC<{ setView: SetViewFn }> = () => {
         <div className="border rounded-lg">
             <h3 className="text-lg font-semibold text-gray-800 p-4 border-b bg-gray-50">{title}</h3>
             <div className="p-2 space-y-1">
-                {items.map(item => (
-                    <button key={item.id} onClick={() => onSelect(item.id)} className={classNames("w-full text-left p-3 rounded-md hover:bg-blue-50", selectedId === item.id && 'bg-blue-100 text-blue-700 font-semibold')}>
-                        {item.name}
-                    </button>
-                ))}
+                {items.map(item => <button key={item.id} onClick={() => onSelect(item.id)} className={classNames("w-full text-left p-3 rounded-md hover:bg-blue-50", selectedId === item.id && 'bg-blue-100 text-blue-700 font-semibold')}>{item.name}</button>)}
             </div>
-            <div className="p-4 border-t">
-                <Button variant="secondary" className="w-full">{Icons.plus} Add New</Button>
-            </div>
+            <div className="p-4 border-t"><Button variant="secondary" className="w-full">{Icons.plus} Add New</Button></div>
         </div>
     );
 
@@ -787,57 +781,328 @@ const ManageCategories: FC<{ setView: SetViewFn }> = () => {
     );
 };
 
-const ManageBrands: FC<{ setView: SetViewFn }> = ({ setView }) => (
+const ManageBrands: FC<{ setView: SetViewFn }> = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="md:col-span-2">
         <Card>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Product Brands</h2>
-            <table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm">
-                <th className="p-3 font-semibold">Brand Name</th><th className="p-3 font-semibold text-center">Products</th>
-                <th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 font-medium text-gray-800">{brand.name}</td>
-                    <td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td>
-                    <td className="p-3">
-                        <div className="flex justify-center items-center space-x-2">
-                            <button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button>
-                            <button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button>
-                        </div>
-                    </td>
-                </tr>))}</tbody>
-            </table>
+            <table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Brand Name</th><th className="p-3 font-semibold text-center">Products</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{brand.name}</td><td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td><td className="p-3"><div className="flex justify-center items-center space-x-2"><button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td></tr>))}</tbody></table>
         </Card>
     </div>
         <div>
             <Card>
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Add New Brand</h3>
                 <form className="space-y-4">
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">Brand Name</label>
-                        <input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" />
-                    </div>
-                    <div><Button className="w-full">Add Brand</Button>
-                    </div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Brand Name</label><input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" /></div>
+                    <div><Button className="w-full">Add Brand</Button></div>
                 </form>
             </Card>
         </div>
     </div>
 );
 
-const OrdersPage: FC = () => {
-    const getStatusColor = (status: string) => {
-        switch (status) { case 'Shipped': return 'blue'; case 'Delivered': return 'green'; case 'Pending': return 'yellow'; case 'Cancelled': return 'red'; default: return 'gray'; }
-    };
+// --- ORDER DETAILS DIALOG COMPONENT ---
+interface OrderDetailsDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    order: Order | null;
+    details: OrderDetails | null;
+}
+
+const OrderDetailsDialog: FC<OrderDetailsDialogProps> = ({ isOpen, onClose, order, details }) => {
+    if (!isOpen || !order || !details) return null;
+
+    const getBrandName = (brandId: number) => mockBrands.find(b => b.id === brandId)?.name || 'N/A';
+    const getProductDetails = (productId: number) => mockProducts.find(p => p.id == productId);
+
     return (
-        <Card>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Orders</h2>
-            <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Order ID</th><th className="p-3 font-semibold">Customer</th><th className="p-3 font-semibold">Date</th><th className="p-3 font-semibold text-right">Total</th><th className="p-3 font-semibold text-center">Status</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockOrders.map(order => (<tr key={order.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600 cursor-pointer hover:underline">{order.id}</td><td className="p-3 text-gray-800">{order.customerName}</td><td className="p-3 text-gray-600">{order.date}</td><td className="p-3 text-right font-medium text-gray-800">${order.total.toFixed(2)}</td><td className="p-3 text-center"><Badge color={getStatusColor(order.status)}>{order.status}</Badge></td><td className="p-3 text-center"><Button variant="secondary" className="text-xs py-1 px-3">View Details</Button></td></tr>))}</tbody></table></div>
-        </Card>
+        <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+            <DialogTitle><span className="font-bold text-gray-800">Order Details: {order.id}</span></DialogTitle>
+            <DialogContent dividers>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6">
+                    <div>
+                        <h4 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">Customer & Shipping Details</h4>
+                        <p className="text-gray-600"><strong className="font-medium text-gray-800">Name:</strong> {details.billingAddress.fullName}</p>
+                        <p className="text-gray-600"><strong className="font-medium text-gray-800">Address:</strong> {`${details.billingAddress.address}, ${details.billingAddress.city}, ${details.billingAddress.postalCode}`}</p>
+                        <p className="text-gray-600"><strong className="font-medium text-gray-800">Mobile:</strong> {details.billingAddress.mobile}</p>
+                    </div>
+
+                    {details.giftAddress && (
+                        <div>
+                            <h4 className="text-lg font-semibold text-gray-700 mb-2 border-b pb-1">Gift Recipient Details 🎁</h4>
+                            <p className="text-gray-600"><strong className="font-medium text-gray-800">Name:</strong> {details.giftAddress.fullName}</p>
+                            <p className="text-gray-600"><strong className="font-medium text-gray-800">Address:</strong> {`${details.giftAddress.address}, ${details.giftAddress.city}, ${details.giftAddress.postalCode}`}</p>
+                            <p className="text-gray-600 mt-2"><strong className="font-medium text-gray-800">Gift Note:</strong> <span className="italic">"{details.giftAddress.note}"</span></p>
+                        </div>
+                    )}
+                </div>
+
+                <h4 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-1">Order Items</h4>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left table-auto">
+                        <thead>
+                            <tr className="bg-gray-50 text-gray-600 text-sm">
+                                <th className="p-3 font-semibold" style={{ width: '50%' }}>Product</th>
+                                <th className="p-3 font-semibold text-center">Qty</th>
+                                <th className="p-3 font-semibold text-right">Price</th>
+                                <th className="p-3 font-semibold text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {details.items.map((item) => {
+                                return (
+                                    <tr key={item.productId} className="border-b">
+                                        <td className="p-3">
+                                            <div className="flex items-center gap-4">
+                                                <img src={item.productImageUrl} alt={item.productName} className="w-16 h-16 rounded-md object-cover" />
+                                                <div>
+                                                    <p className="font-medium text-gray-800">{item.productName}</p>
+                                                    <p className="text-sm text-gray-500">Brand: {item.brandName}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-3 text-center text-gray-600">{item.qty}</td>
+                                        <td className="p-3 text-right text-gray-600">LKR{item.price.toFixed(2)}</td>
+                                        <td className="p-3 text-right font-medium text-gray-800">LKR {(item.qty * item.price).toFixed(2)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                        <tfoot>
+                            <tr className="font-bold bg-gray-50">
+                                <td colSpan={3} className="p-3 text-right text-gray-500">Delivery Fee</td>
+                                <td className="p-3 text-right text-gray-500">LKR 500.00</td>
+                            </tr>
+                            <tr className="font-bold bg-gray-50">
+                                <td colSpan={3} className="p-3 text-right text-xl text-gray-800">Total</td>
+                                <td className="p-3 text-right text-xl text-gray-800">LKR {order.total.toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </DialogContent>
+            <DialogActions className="p-4 bg-gray-50">
+                <Button onClick={onClose} variant="secondary">Close</Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
+// --- ORDERS PAGE COMPONENT ---
+const OrdersPage: FC = () => {
+    const [orders, setOrders] = useState<Order[]>(mockOrders);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const [orderDetails, setOrderDetails] = useState<{ [key: string]: OrderDetails }>({});
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const orderStatuses: Order['status'][] = ['Paid', 'Pending', 'Processing', 'Shipped', 'Delivered'];
+    const getStatusColor = (status: Order['status']) => {
+        switch (status) {
+            case 'Paid': return 'blue';
+            case 'Processing': return 'yellow';
+            case 'Shipped': return 'gray';
+            case 'Delivered': return 'green';
+            case 'Pending': return 'red';
+            default: return 'gray';
+        }
+    };
+
+    const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+        setOrders(orders.map(o => o.id == orderId ? { ...o, status: newStatus } : o));
+        // toast.success(`Order ${orderId} status updated to ${newStatus}`);
+        console.log(newStatus);
+        updateDeliveryStatus(orderId, newStatus);
+    };
+
+    const handleViewDetails = (order: Order) => {
+        setSelectedOrder(order);
+        setIsDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setIsDialogOpen(false);
+        setSelectedOrder(null);
+    };
+
+    const loadAllOrders = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/LoadAllOrders", {
+                method: "GET",
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch orders.");
+            }
+
+            const json = await response.json();
+
+            console.log(json);
+
+            // --- DATA TRANSFORMATION LOGIC ---
+
+            if (json && json.invoiceList && json.invoiceItemsList) {
+                const { invoiceList, invoiceItemsList } = json;
+
+                // 1. Create a map of order items for quick lookup.
+                // The key will be the order_id (e.g., "#0001"), and the value will be an array of OrderItem.
+                const itemsMap = invoiceItemsList.reduce((acc: { [key: string]: OrderItem[] }, group: any) => {
+                    acc[group.orderId] = group.invoiceItemses.map((item: any) => ({
+                        productId: item.stock.product.id,
+                        productName: item.stock.product.title,
+                        productImageUrl: `http://localhost:8080/Edumart-Backend/product-images/${item.stock.product.id}/image1.png`,
+                        brandName: item.stock.product.brand.name,
+                        qty: item.qty,
+                        price: item.stock.price,
+                    }));
+                    return acc;
+                }, {});
+
+                // 2. Process the main invoiceList to create the final data structures.
+                const formattedOrders: Order[] = [];
+                const formattedOrderDetails: { [key: string]: OrderDetails } = {};
+
+                invoiceList.forEach((invoice: any) => {
+                    const orderId = invoice.order_id;
+
+                    // Create the Order summary object for the main table
+                    formattedOrders.push({
+                        id: orderId,
+                        customerName: invoice.user.email + " ( " + invoice.user.username + " ) ",
+                        date: new Date(invoice.created_at).toLocaleDateString('en-CA'), // Format date for consistency
+                        total: invoice.amount,
+                        status: invoice.orderStatus.value,
+                    });
+
+                    // Create the full OrderDetails object for the dialog
+                    formattedOrderDetails[orderId] = {
+                        billingAddress: {
+                            fullName: invoice.userAddress.full_name,
+                            address: invoice.userAddress.address,
+                            city: invoice.userAddress.city.name,
+                            postalCode: invoice.userAddress.postal_code,
+                            mobile: invoice.userAddress.mobile,
+                        },
+                        giftAddress: invoice.giftAddress ? {
+                            fullName: invoice.giftAddress.full_name,
+                            address: invoice.giftAddress.address,
+                            city: invoice.giftAddress.city.name,
+                            postalCode: invoice.giftAddress.postal_code,
+                            note: invoice.giftAddress.note,
+                        } : null,
+                        items: itemsMap[orderId] || [], // Get the items from our map
+                    };
+                });
+
+                // 3. Set the state with our newly formatted data!
+                setOrders(formattedOrders);
+                setOrderDetails(formattedOrderDetails);
+            }
+
+        } catch (error) {
+            toast.error("Something wrong with the server!");
+            console.error("loadAllOrders Error:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadAllOrders();
+    }, []);
+
+    const updateDeliveryStatus = async (orderId: string, newStatus: Order['status']) => {
+        const status = {
+            newStatus: newStatus,
+            orderId: orderId
+        };
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/DeliveryStatusUpdate", {
+                method: "PUT",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(status)
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    toast.success("Delivery Status Updated To " + newStatus + " !");
+                    loadAllOrders();
+                } else {
+                    toast.error(json.message);
+                }
+            } else {
+                toast.error("Delivery Status update failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Something wrong ! Please try again");
+            console.error("Delivery Status update Error:", error);
+        }
+    };
+
+    return (
+        <>
+            <Card>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Orders</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left table-auto">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-600 text-sm">
+                                <th className="p-3 font-semibold">Order ID</th>
+                                <th className="p-3 font-semibold text-center">Customer</th>
+                                <th className="p-3 font-semibold text-center">Date</th>
+                                <th className="p-3 font-semibold text-center">Total</th>
+                                <th className="p-3 font-semibold text-center">Status</th>
+                                <th className="p-3 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders.map(order => (
+                                <tr key={order.id} className="border-b hover:bg-gray-50">
+                                    <td className="p-3 font-medium text-blue-600">{order.id}</td>
+                                    <td className="p-3 text-gray-800 text-center">{order.customerName}</td>
+                                    <td className="p-3 text-gray-600 text-center">{order.date}</td>
+                                    <td className="p-3 text-center font-medium text-gray-800">LKR {order.total.toFixed(2)}</td>
+                                    <td className="p-3 text-center">
+                                        <select
+                                            value={order.status}
+                                            onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
+                                            className={classNames(
+                                                'border-gray-300 rounded-full text-xs font-semibold text-center focus:ring-2 focus:ring-blue-500 py-1 pl-3 pr-8 cursor-pointer appearance-none',
+                                                `bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800`
+                                            )}
+                                        >
+                                            {orderStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                                        </select>
+                                    </td>
+                                    <td className="p-3 text-center flex justify-center items-center">
+                                        <Button onClick={() => handleViewDetails(order)} variant="secondary" className="text-xs py-1 px-3 cursor-pointer">View Details</Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+
+            <OrderDetailsDialog
+                isOpen={isDialogOpen}
+                onClose={handleCloseDialog}
+                order={selectedOrder}
+                // Pass details from the new state, not the mock data
+                details={selectedOrder ? orderDetails[selectedOrder.id] : null}
+            />
+        </>
     );
 };
 
 const CustomersPage: FC = () => (
     <Card>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Customers</h2>
-        <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Name</th><th className="p-3 font-semibold">Email</th><th className="p-3 font-semibold">Joined On</th><th className="p-3 font-semibold text-center">Orders</th><th className="p-3 font-semibold text-right">Total Spent</th></tr></thead><tbody>{mockCustomers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{customer.name}</td><td className="p-3 text-gray-600">{customer.email}</td><td className="p-3 text-gray-600">{customer.joinDate}</td><td className="p-3 text-center text-gray-600">{customer.orderCount}</td><td className="p-3 text-right font-medium text-gray-800">${customer.totalSpent.toFixed(2)}</td></tr>))}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Name</th><th className="p-3 font-semibold">Email</th><th className="p-3 font-semibold">Joined On</th><th className="p-3 font-semibold text-center">Orders</th><th className="p-3 font-semibold text-right">Total Spent</th></tr></thead><tbody>{mockCustomers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{customer.name}</td><td className="p-3 text-gray-600">{customer.email}</td><td className="p-3 text-gray-600">{customer.joinDate}</td><td className="p-3 text-center text-gray-600">{customer.orderCount}</td><td className="p-3 text-right font-medium text-gray-800">LKR {customer.totalSpent.toFixed(2)}</td></tr>))}</tbody></table></div>
     </Card>
 );
 
@@ -870,24 +1135,21 @@ const ManageUsersPage: FC = () => (
 );
 
 const SettingsPage: FC = () => (
-    <div><h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2><div className="grid grid-cols-1 lg:grid-cols-3 gap-8"><div className="lg:col-span-2 space-y-8"><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Store Details</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Store Name</label><input type="text" defaultValue="EduMart" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-gray-700 font-medium mb-2">Store Email</label><input type="email" defaultValue="contact@edumart.com" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div></div></Card><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Currency Options</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Currency</label><select className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>USD ($)</option><option>EUR (€)</option><option>GBP (£)</option></select></div></div></Card></div><div className="lg:col-span-1"><Card><h3 className="text-xl font-bold text-gray-800 mb-4">Save Changes</h3><p className="text-gray-600 mb-4">Click the button below to save all your settings changes.</p><Button className="w-full">Save Settings</Button></Card></div></div></div>
+    <div><h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2><div className="grid grid-cols-1 lg:grid-cols-3 gap-8"><div className="lg:col-span-2 space-y-8"><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Store Details</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Store Name</label><input type="text" defaultValue="EduMart" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-gray-700 font-medium mb-2">Store Email</label><input type="email" defaultValue="contact@edumart.com" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div></div></Card><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Currency Options</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Currency</label><select className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>LKR (Rs)</option><option>USD ($)</option><option>EUR (€)</option></select></div></div></Card></div><div className="lg:col-span-1"><Card><h3 className="text-xl font-bold text-gray-800 mb-4">Save Changes</h3><p className="text-gray-600 mb-4">Click the button below to save all your settings changes.</p><Button className="w-full">Save Settings</Button></Card></div></div></div>
 );
 
 
 // --- Main App Component ---
 const AdminDashboard: FC = () => {
     const [view, setView] = useState('dashboard');
-    const [params, setParams] = useState<any>(null);
+    const [params, setParams] = useState<object | null>(null);
 
     const handleSetView: SetViewFn = (newView, newParams) => {
         setView(newView);
-        setParams(newParams);
+        setParams(newParams || null);
     };
 
-    //Functional Js
-
     const loadProductData = async () => {
-
         try {
             const response = await fetch("http://localhost:8080/Edumart-Backend/LoadProductData", {
                 method: "GET",
@@ -896,7 +1158,6 @@ const AdminDashboard: FC = () => {
 
             if (response.ok) {
                 const json = await response.json();
-
                 mockBrands = json.brandList || [];
                 mockMainCategories = json.mainCategoryList || [];
                 mockCategories = json.categoryList.map((cat: { id: number; name: string; mainCategory: { id: number } }) => ({
@@ -904,22 +1165,16 @@ const AdminDashboard: FC = () => {
                     name: cat.name,
                     main_category_id: cat.mainCategory?.id || null,
                 }));
-
                 mockSubCategories = json.subCategoryList.map((subCat: { id: number; name: string; category: { id: number }; }) => ({
                     id: subCat.id,
                     name: subCat.name,
                     category_id: subCat.category?.id ?? null,
                 }));
-
-
-                // setCities(json);
-
             } else {
-                console.log("Product Data load failed. Please try again");
                 toast.error("Product Data load failed. Please try again");
             }
         } catch (error) {
-            toast.error("Something wrong ! Please try again" + error);
+            toast.error("Something wrong with the server!");
             console.error("Product Data load Error:", error);
         }
     };
@@ -927,8 +1182,6 @@ const AdminDashboard: FC = () => {
     useEffect(() => {
         loadProductData();
     }, []);
-
-    //Functional Js
 
     const renderView = () => {
         const currentView = view.split('/')[0];
@@ -939,7 +1192,7 @@ const AdminDashboard: FC = () => {
                 switch (subView) {
                     case 'list': return <ProductList setView={handleSetView} />;
                     case 'add': return <AddEditProduct setView={handleSetView} />;
-                    case 'edit': return <AddEditProduct setView={handleSetView} params={params} />;
+                    case 'edit': return <AddEditProduct setView={handleSetView} params={params as { id: number }} />;
                     case 'categories': return <ManageCategories setView={handleSetView} />;
                     case 'brands': return <ManageBrands setView={handleSetView} />;
                     default: return <ProductList setView={handleSetView} />;
