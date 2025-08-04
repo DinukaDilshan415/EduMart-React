@@ -180,7 +180,17 @@ let mockOrderDetails: { [key: string]: OrderDetails } = {
     // },
 };
 
-const mockCustomers = [{ id: 1, name: 'John Doe', email: 'john.doe@example.com', joinDate: '2023-01-15', orderCount: 5, totalSpent: 450.75 }, { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', joinDate: '2023-02-20', orderCount: 8, totalSpent: 1250.00 }, { id: 3, name: 'Peter Jones', email: 'peter.jones@example.com', joinDate: '2023-05-10', orderCount: 2, totalSpent: 85.20 }];
+let mockCustomers = [
+    {
+        id: 1,
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        mobile: '0771234567',
+        joinDate: '2023-01-15',
+        orderCount: 5,
+        totalSpent: 450.75
+    }];
+
 const mockReviews = [{ id: 1, productName: 'Parker Jotter Ballpoint Pen', customerName: 'John Doe', rating: 5, comment: 'Excellent pen, writes smoothly and looks very professional. Highly recommended!', date: '2024-07-15', status: 'Approved' }, { id: 2, productName: 'Ergonomic Office Chair', customerName: 'Jane Smith', rating: 3, comment: 'It\'s a decent chair for the price, but the armrests feel a bit flimsy. Assembly was straightforward.', date: '2024-07-12', status: 'Approved' }, { id: 3, productName: 'A4 Paper Ream', customerName: 'Peter Jones', rating: 4, comment: 'Good quality paper, but the packaging was slightly damaged on arrival.', date: '2024-07-10', status: 'Pending' }];
 const mockUsers = [{ id: 1, name: 'Admin User', email: 'admin@edumart.com', role: 'Administrator', lastLogin: '2024-07-21 10:30 AM' }, { id: 2, name: 'Manager Sam', email: 'sam@edumart.com', role: 'Manager', lastLogin: '2024-07-21 09:15 AM' }, { id: 3, name: 'Support Alex', email: 'alex@edumart.com', role: 'Support Staff', lastLogin: '2024-07-20 04:00 PM' }];
 
@@ -273,9 +283,17 @@ const Sidebar: FC<SidebarProps> = ({ currentView, setView }) => {
     const toggleProductsMenu = () => setIsProductsOpen(!isProductsOpen);
 
     return (
-        <aside className="w-64 bg-white border-r h-full flex flex-col flex-shrink-0">
+        <aside className="w-64 bg-white border-r h-full flex flex-col flex-shrink-0 rounded-l-2xl shadow-lg">
             <div className="p-4 border-b h-16 flex items-center">
-                <h1 className="text-2xl font-bold text-blue-600">EduMart</h1>
+                <div className="flex justify-center">
+                    <a href="/admin/dashboard">
+                        <img
+                            src="https://raw.githubusercontent.com/DinukaDilshan415/images/e901f9915a4c2352ca11d97a9fde00698b100e14/edumart-svg-diga.svg"
+                            alt="Company Logo"
+                            className="w-48"
+                        />
+                    </a>
+                </div>
             </div>
             <nav className="flex-1 p-4 overflow-y-auto">
                 <NavLink view="dashboard" icon={Icons.dashboard}>Dashboard</NavLink>
@@ -512,7 +530,16 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left table-auto">
-                    <thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Product</th><th className="p-3 font-semibold">Category Path</th><th className="p-3 font-semibold text-center">Stock</th><th className="p-3 font-semibold text-right">Price</th><th className="p-3 font-semibold text-center">Status</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead>
+                    <thead>
+                        <tr className="bg-gray-100 text-gray-600 text-sm">
+                            <th className="p-3 font-semibold">Product</th>
+                            <th className="p-3 font-semibold">Category Path</th>
+                            <th className="p-3 font-semibold text-center">Stock</th>
+                            <th className="p-3 font-semibold text-center">Price</th>
+                            <th className="p-3 font-semibold text-center">Status</th>
+                            <th className="p-3 font-semibold text-center">Actions</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         {products.map((product) => (
                             <tr key={product.id} className="border-b hover:bg-gray-50">
@@ -1099,12 +1126,72 @@ const OrdersPage: FC = () => {
     );
 };
 
-const CustomersPage: FC = () => (
-    <Card>
+const CustomersPage: FC = () => {
+    const [customers, setCustomers] = useState(mockCustomers);
+
+    const loadCustomers = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/LoadCustomers", {
+                method: "GET",
+                credentials: "include",
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                console.log(json);
+
+                mockCustomers = json.customerList.map((cus: any) => ({
+                    id: cus.user.id,
+                    name: cus.user.username,
+                    email: cus.user.email,
+                    mobile: cus.user.mobile,
+                    joinDate: new Date(cus.user.created_at).toLocaleDateString('en-CA'),
+                    orderCount: cus.orderCount,
+                    totalSpent: cus.spent
+                }));
+
+                setCustomers(mockCustomers);
+
+            } else {
+                toast.error("Customers load failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Something wrong with the server!");
+            console.error("Customers load Error:", error);
+        }
+    };
+
+    useEffect(() => {
+        loadCustomers();
+    }, []);
+
+    return (<Card>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Customers</h2>
-        <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Name</th><th className="p-3 font-semibold">Email</th><th className="p-3 font-semibold">Joined On</th><th className="p-3 font-semibold text-center">Orders</th><th className="p-3 font-semibold text-right">Total Spent</th></tr></thead><tbody>{mockCustomers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{customer.name}</td><td className="p-3 text-gray-600">{customer.email}</td><td className="p-3 text-gray-600">{customer.joinDate}</td><td className="p-3 text-center text-gray-600">{customer.orderCount}</td><td className="p-3 text-right font-medium text-gray-800">LKR {customer.totalSpent.toFixed(2)}</td></tr>))}</tbody></table></div>
-    </Card>
-);
+        <div className="overflow-x-auto">
+            <table className="w-full text-left table-auto">
+                <thead>
+                    <tr className="bg-gray-100 text-gray-600 text-sm">
+                        <th className="p-3 font-semibold">Name</th>
+                        <th className="p-3 font-semibold text-center">Email</th>
+                        <th className="p-3 font-semibold text-center">Mobile Number</th>
+                        <th className="p-3 font-semibold text-center">Joined On</th>
+                        <th className="p-3 font-semibold text-center">Orders</th>
+                        <th className="p-3 font-semibold text-right">Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody>{customers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-medium text-gray-800">{customer.name}</td>
+                    <td className="p-3 text-gray-600 text-center">{customer.email}</td>
+                    <td className="p-3 text-gray-600 text-center">{customer.mobile}</td>
+                    <td className="p-3 text-gray-600 text-center">{customer.joinDate}</td>
+                    <td className="p-3 text-center text-gray-600">{customer.orderCount}</td>
+                    <td className="p-3 text-right font-medium text-gray-800">LKR {customer.totalSpent.toFixed(2)}</td>
+                </tr>))}
+                </tbody>
+            </table>
+        </div>
+    </Card>);
+};
 
 const ReviewsPage: FC = () => {
     const StarRating: FC<{ rating: number }> = ({ rating }) => (<div className="flex items-center">{[...Array(5)].map((_, i) => (<Icon key={i} path={Icons.star.props.path} className={classNames('w-5 h-5', i < rating ? 'text-yellow-400' : 'text-gray-300')} />))}</div>);
@@ -1208,9 +1295,9 @@ const AdminDashboard: FC = () => {
     };
 
     return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            <Sidebar currentView={view} setView={handleSetView} />
-            <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex h-screen bg-edumartHover/30 font-sans p-6">
+            <Sidebar currentView={view} setView={handleSetView}/>
+            <div className="flex-1 flex flex-col overflow-hidden rounded-r-2xl bg-white shadow-lg">
                 <Header />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
                     {renderView()}
