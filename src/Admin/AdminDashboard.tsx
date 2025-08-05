@@ -6,6 +6,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { LogOut } from 'lucide-react';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 // Helper function to conditionally apply class names
 const classNames = (...classes: (string | boolean | undefined)[]) => {
@@ -13,6 +16,42 @@ const classNames = (...classes: (string | boolean | undefined)[]) => {
 };
 
 // --- TYPE DEFINITIONS ---
+
+type Kpi = {
+    title: string;
+    value: string;
+    trend: string;
+    trendDirection: 'up' | 'down';
+};
+
+type SalesDataPoint = {
+    label: string;
+    revenue: number;
+};
+
+type TopProduct = {
+    name: string;
+    sold: string;
+    revenue: string;
+    img: string;
+};
+
+type LowStockItem = {
+    name: string;
+    sku: string;
+    left: number;
+};
+
+type DashboardData = {
+    kpis: Kpi[];
+    salesData: SalesDataPoint[];
+    recentOrders: Order[];
+    topProducts: TopProduct[];
+    lowStockItems: LowStockItem[];
+};
+
+//dashboard types ^
+
 type Address = {
     fullName: string;
     address: string;
@@ -65,6 +104,21 @@ type ProductData = {
     subCategory: string;
 };
 
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    password?: string; // Optional because we don't fetch it back
+    role: 'Admin' | 'Moderator' | '0';
+    createdAt: string;
+    status: 'Active' | 'Inactive';
+};
+
+type Roles = {
+    id: string;
+    value: string;
+};
+
 // --- MOCK DATA ---
 let mockMainCategories = [
     { id: 1, name: 'School Supplies' },
@@ -98,88 +152,6 @@ let mockOrders: Order[] = [
     { id: 'ORD-2024-005', customerName: 'Chris Lee', date: '2025-08-02', total: 62.50, status: 'Paid' }
 ];
 
-let mockOrderDetails: { [key: string]: OrderDetails } = {
-    // 'ORD-2024-001': {
-    //     billingAddress: {
-    //         fullName: 'John Doe',
-    //         address: '123 Main St',
-    //         city: 'Gampaha',
-    //         postalCode: '11000',
-    //         mobile: '077-123-4567',
-    //     },
-    //     giftAddress: {
-    //         fullName: 'Jane Smith (Recipient)',
-    //         address: '456 Lake Rd',
-    //         city: 'Colombo',
-    //         postalCode: '00500',
-    //         note: 'Happy Birthday! Hope you like it.'
-    //     },
-    //     items: [
-    //         { productId: 1, qty: 5, price: 5.99 },
-    //         { productId: 2, qty: 1, price: 12.50 },
-    //     ]
-    // },
-    // 'ORD-2024-002': {
-    //     billingAddress: {
-    //         fullName: 'Jane Smith',
-    //         address: '789 Market Blvd',
-    //         city: 'Kandy',
-    //         postalCode: '20000',
-    //         mobile: '071-987-6543'
-    //     },
-    //     giftAddress: null,
-    //     items: [
-    //         { productId: 3, qty: 1, price: 120.00 },
-    //     ]
-    // },
-    // 'ORD-2024-003': {
-    //     billingAddress: {
-    //         fullName: 'Peter Jones',
-    //         address: '101 First Ln',
-    //         city: 'Galle',
-    //         postalCode: '80000',
-    //         mobile: '076-555-0000',
-    //     },
-    //     giftAddress: null,
-    //     items: [
-    //         { productId: 2, qty: 1, price: 12.50 },
-    //     ]
-    // },
-    // 'ORD-2024-004': {
-    //     billingAddress: {
-    //         fullName: 'Mary Johnson',
-    //         address: '222 Flower Rd',
-    //         city: 'Colombo 07',
-    //         postalCode: '00700',
-    //         mobile: '075-111-2222',
-    //     },
-    //     giftAddress: {
-    //         fullName: 'Samwise Gamgee',
-    //         address: '333 Bag End',
-    //         city: 'The Shire',
-    //         postalCode: 'N/A',
-    //         note: 'For your adventures!'
-    //     },
-    //     items: [
-    //         { productId: 1, qty: 10, price: 5.99 },
-    //         { productId: 3, qty: 1, price: 120.00 },
-    //     ]
-    // },
-    // 'ORD-2024-005': {
-    //     billingAddress: {
-    //         fullName: 'Chris Lee',
-    //         address: '555 Tech Way',
-    //         city: 'Jaffna',
-    //         postalCode: '40000',
-    //         mobile: '070-321-6548',
-    //     },
-    //     giftAddress: null,
-    //     items: [
-    //         { productId: 2, qty: 5, price: 12.50 },
-    //     ]
-    // },
-};
-
 let mockCustomers = [
     {
         id: 1,
@@ -192,7 +164,8 @@ let mockCustomers = [
     }];
 
 const mockReviews = [{ id: 1, productName: 'Parker Jotter Ballpoint Pen', customerName: 'John Doe', rating: 5, comment: 'Excellent pen, writes smoothly and looks very professional. Highly recommended!', date: '2024-07-15', status: 'Approved' }, { id: 2, productName: 'Ergonomic Office Chair', customerName: 'Jane Smith', rating: 3, comment: 'It\'s a decent chair for the price, but the armrests feel a bit flimsy. Assembly was straightforward.', date: '2024-07-12', status: 'Approved' }, { id: 3, productName: 'A4 Paper Ream', customerName: 'Peter Jones', rating: 4, comment: 'Good quality paper, but the packaging was slightly damaged on arrival.', date: '2024-07-10', status: 'Pending' }];
-const mockUsers = [{ id: 1, name: 'Admin User', email: 'admin@edumart.com', role: 'Administrator', lastLogin: '2024-07-21 10:30 AM' }, { id: 2, name: 'Manager Sam', email: 'sam@edumart.com', role: 'Manager', lastLogin: '2024-07-21 09:15 AM' }, { id: 3, name: 'Support Alex', email: 'alex@edumart.com', role: 'Support Staff', lastLogin: '2024-07-20 04:00 PM' }];
+
+let mockUsers: User[] = [];
 
 // --- SVG ICONS ---
 const Icon: FC<{ path: string; className?: string }> = ({ path, className = 'w-6 h-6' }) => (
@@ -220,6 +193,8 @@ const Icons = {
     star: <Icon path="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69L11.049 2.927z" />,
     check: <Icon path="M5 13l4 4L19 7" className="w-5 h-5" />,
     upload: <Icon path="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />,
+    arrowUp: <Icon path="M5 10l7-7m0 0l7 7m-7-7v18" />,
+    arrowDown: <Icon path="M19 14l-7 7m0 0l-7-7m7 7V3" />,
 };
 
 // --- UI Components ---
@@ -230,7 +205,7 @@ const Card: FC<{ children: ReactNode; className?: string }> = ({ children, class
 );
 
 const Button: FC<{ onClick?: () => void; children: ReactNode; variant?: 'primary' | 'secondary' | 'danger'; className?: string, type?: 'button' | 'submit' }> = ({ onClick, children, variant = 'primary', className, type = 'button' }) => {
-    const baseClasses = "px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+    const baseClasses = "px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer";
     const variantClasses = {
         primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
         secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
@@ -413,17 +388,248 @@ const Header: FC<{}> = () => (
 
 // --- Page Components ---
 
-const DashboardPage: FC = () => (
-    <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card><h3 className="text-gray-500 font-medium">Total Revenue</h3><p className="text-3xl font-bold text-gray-800 mt-2">LKR 45,231.89</p><p className="text-green-500 text-sm mt-1">+20.1% from last month</p></Card>
-            <Card><h3 className="text-gray-500 font-medium">Orders</h3><p className="text-3xl font-bold text-gray-800 mt-2">1,830</p><p className="text-green-500 text-sm mt-1">+5.2% from last month</p></Card>
-            <Card><h3 className="text-gray-500 font-medium">Active Products</h3><p className="text-3xl font-bold text-gray-800 mt-2">342</p><p className="text-gray-500 text-sm mt-1">12 inactive</p></Card>
-            <Card><h3 className="text-gray-500 font-medium">New Customers</h3><p className="text-3xl font-bold text-gray-800 mt-2">156</p><p className="text-red-500 text-sm mt-1">-2.8% from last month</p></Card>
+const DashboardPage: FC = () => {
+    const [data, setData] = useState<DashboardData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const chartRef = useRef<HTMLCanvasElement>(null);
+    const chartInstance = useRef<Chart | null>(null);
+
+    useEffect(() => {
+        const loadDashboardData = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadDashboardData`, {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                if (response.ok) {
+                    const json = await response.json();
+                    if (json.status) {
+                        console.log(json);
+
+
+                    } else {
+                        toast.error(json.message);
+                    }
+                } else {
+                    toast.error("Dashboard load failed. Please try again");
+                }
+
+                const mockApiData: DashboardData = {
+                    kpis: [
+                        { title: 'Total Revenue', value: 'LKR 45,231.89', trend: '+20.1%', trendDirection: 'up' },
+                        { title: 'Orders', value: '1,830', trend: '+5.2%', trendDirection: 'up' },
+                        { title: 'Customers', value: '156', trend: '-2.8%', trendDirection: 'up' },
+                        { title: 'Active Products', value: '156', trend: '+0.3%', trendDirection: 'up' },
+                    ],
+                    salesData: [
+                        { label: 'Jul 06', revenue: 15000 },
+                        { label: 'Jul 11', revenue: 22000 },
+                        { label: 'Jul 16', revenue: 18000 },
+                        { label: 'Jul 21', revenue: 27000 },
+                        { label: 'Jul 26', revenue: 25000 },
+                        { label: 'Jul 31', revenue: 35000 },
+                        { label: 'Aug 05', revenue: 45231 }
+                    ],
+                    recentOrders: [
+                        { id: '#EDM-8923', customerName: 'Nimal Perera', total: 2450.00, status: 'Delivered', date: 'Aug 05, 2025' },
+                        { id: '#EDM-8922', customerName: 'Fathima Rizwan', total: 1200.50, status: 'Shipped', date: 'Aug 05, 2025' },
+                        { id: '#EDM-8921', customerName: 'S. Kumar', total: 8900.00, status: 'Processing', date: 'Aug 04, 2025' },
+                        { id: '#EDM-8920', customerName: 'Anusha Silva', total: 550.00, status: 'Paid', date: 'Aug 03, 2025' },
+                    ],
+                    topProducts: [
+                        { name: 'Atlas CR Book 120 Pages', sold: '1,230 units', revenue: 'LKR 147,600', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Atlas' },
+                        { name: 'Promate Pen Pack (Blue)', sold: '980 units', revenue: 'LKR 49,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Promate' },
+                        { name: 'A4 Paper Ream (80gsm)', sold: '450 units', revenue: 'LKR 900,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=A4' },
+                    ],
+                    lowStockItems: [
+                        { name: 'School Bag - Grade 5', sku: 'BG-005-B', left: 5 },
+                        { name: 'Whiteboard Marker (Black)', sku: 'MK-WB-01', left: 12 },
+                    ]
+                };
+                setData(mockApiData);
+
+            } catch (error) {
+                toast.error("Failed to load dashboard data.");
+                console.error("Dashboard Load Error:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadDashboardData();
+    }, []);
+
+    useEffect(() => {
+        if (chartInstance.current) {
+            chartInstance.current.destroy();
+        }
+        if (chartRef.current && data?.salesData) {
+            const ctx = chartRef.current.getContext('2d');
+            if (ctx) {
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.salesData.map(d => d.label),
+                        datasets: [{
+                            label: 'Revenue (LKR)',
+                            data: data.salesData.map(d => d.revenue),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: (value: any) => `LKR ${Number(value) / 1000}k` } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context: any) => `Revenue: ${new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR' }).format(context.parsed.y)}`
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        return () => {
+            if (chartInstance.current) {
+                chartInstance.current.destroy();
+            }
+        };
+    }, [data]);
+
+    const getStatusBadgeColor = (status: Order['status']) => {
+        switch (status) {
+            case 'Delivered': return 'green';
+            case 'Shipped': return 'gray';
+            case 'Processing': return 'yellow';
+            case 'Paid': return 'blue';
+            case 'Pending': return 'red';
+            default: return 'gray';
+        }
+    };
+
+    const PulsingDots = () => {
+        return (
+            <div className="flex items-center justify-center space-x-2 mt-60">
+                <div className="h-20 w-20 animate-pulse rounded-full bg-blue-500 [animation-delay:-0.3s]"></div>
+                <div className="h-20 w-20 animate-pulse rounded-full bg-blue-500 [animation-delay:-0.15s]"></div>
+                <div className="h-20 w-20 animate-pulse rounded-full bg-blue-500"></div>
+            </div>
+        );
+    };
+
+    if (isLoading) {
+        return <div><PulsingDots /></div>;
+    }
+
+    if (!data) {
+        return <div>Failed to load data.</div>;
+    }
+
+    return (
+        <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {data.kpis.map((kpi) => (
+                    <Card key={kpi.title}>
+                        <h3 className="text-gray-500 font-medium">{kpi.title}</h3>
+                        <p className="text-3xl font-bold text-gray-800 mt-2">{kpi.value}</p>
+                        <p className={classNames("text-sm mt-1 flex items-center", kpi.trendDirection === 'up' ? 'text-green-500' : 'text-red-500')}>
+                            {kpi.trendDirection === 'up' ? Icons.arrowUp : Icons.arrowDown}
+                            <span className="ml-1">{kpi.trend}</span>
+                        </p>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Main Dashboard Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    <Card className="h-96">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sales Overview</h3>
+                        <canvas ref={chartRef}></canvas>
+                    </Card>
+                    <Card>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="text-sm font-semibold text-gray-600 border-b">
+                                        <th className="py-2 px-3">Order ID</th>
+                                        <th className="py-2 px-3">Customer</th>
+                                        <th className="py-2 px-3">Amount</th>
+                                        <th className="py-2 px-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.recentOrders.map(order => (
+                                        <tr key={order.id} className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-3 font-medium text-blue-600">{order.id}</td>
+                                            <td className="py-3 px-3">{order.customerName}</td>
+                                            <td className="py-3 px-3">LKR {order.total.toFixed(2)}</td>
+                                            <td className="py-3 px-3">
+                                                <Badge color={getStatusBadgeColor(order.status)}>{order.status}</Badge>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                    <Card>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Selling Products</h3>
+                        <ul className="space-y-4">
+                            {data.topProducts.map((p, i) => (
+                                <li key={i} className="flex items-center space-x-4">
+                                    <img src={p.img} alt={p.name} className="w-12 h-12 rounded-lg object-cover bg-gray-200" />
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-gray-800 text-sm">{p.name}</p>
+                                        <p className="text-xs text-gray-500">{p.sold}</p>
+                                    </div>
+                                    <p className="font-semibold text-gray-800 text-sm">{p.revenue}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </Card>
+                    <Card>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Low Stock Alerts</h3>
+                        <ul className="space-y-3">
+                            {data.lowStockItems.map((item, i) => (
+                                <li key={i} className="flex justify-between items-center">
+                                    <div>
+                                        <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
+                                        <p className="text-xs text-gray-500">SKU: {item.sku}</p>
+                                    </div>
+                                    <span className={classNames('font-bold text-sm px-3 py-1 rounded-full', item.left <= 5 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')}>
+                                        {item.left} left
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </Card>
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
     const [products, setProducts] = useState(mockProducts);
@@ -547,7 +753,12 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
                                 <td className="p-3 text-gray-600 text-xs">{getCategoryPath(product.sub_category_id)}</td>
                                 <td className="p-3 text-center text-gray-600">{product.stock}</td><td className="p-3 text-right font-medium text-gray-800">LKR {product.price.toFixed(2)}</td>
                                 <td className="p-3 text-center"><Badge color={product.active ? 'green' : 'red'}>{product.active ? 'Active' : 'Inactive'}</Badge></td>
-                                <td className="p-3"><div className="flex justify-center items-center space-x-2"><button onClick={() => toggleStatus(product.id)} className={classNames("p-2 rounded-full hover:bg-gray-200", product.active ? 'text-green-500' : 'text-red-500')}>{product.active ? Icons.toggleOn : Icons.toggleOff}</button><button onClick={() => setView('products/edit', { id: product.id })} className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td>
+                                <td className="p-3">
+                                    <div className="flex justify-center items-center space-x-2">
+                                        <button onClick={() => toggleStatus(product.id)} className={classNames("p-2 rounded-full hover:bg-gray-200", product.active ? 'text-green-500' : 'text-red-500')}>{product.active ? Icons.toggleOn : Icons.toggleOff}</button>
+                                        <button onClick={() => setView('products/edit', { id: product.id })} className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button>
+                                    </div>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -1214,12 +1425,333 @@ const InventoryPage: FC = () => {
     );
 };
 
-const ManageUsersPage: FC = () => (
-    <Card>
-        <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold text-gray-800">Manage Users</h2><Button>{Icons.plus} Add User</Button></div>
-        <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">User</th><th className="p-3 font-semibold">Role</th><th className="p-3 font-semibold">Last Login</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockUsers.map(user => (<tr key={user.id} className="border-b hover:bg-gray-50"><td className="p-3"><div className="font-medium text-gray-800">{user.name}</div><div className="text-sm text-gray-500">{user.email}</div></td><td className="p-3 text-gray-600">{user.role}</td><td className="p-3 text-gray-600">{user.lastLogin}</td><td className="p-3"><div className="flex justify-center items-center space-x-2"><button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td></tr>))}</tbody></table></div>
-    </Card>
-);
+// --- Add this new component before ManageUsersPage ---
+
+interface AddEditUserDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (user: Omit<User, 'createdAt'>) => void;
+    userToEdit: Omit<User, 'createdAt'> | null;
+    setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+    handleCloseModal: () => void;
+}
+
+const AddEditUserDialog: FC<AddEditUserDialogProps> = ({ isOpen, onClose, onSave, userToEdit, setUsers, handleCloseModal }) => {
+    const [roles, setRoles] = useState<Roles[]>([]);
+
+    const [formData, setFormData] = useState({
+        id: 0,
+        name: '',
+        email: '',
+        password: '',
+        role: 'Support Staff' as User['role'],
+        status: 'Active' as User['status'],
+    });
+
+    const isEditMode = userToEdit !== null;
+
+    useEffect(() => {
+        if (isEditMode) {
+            setFormData({
+                id: userToEdit.id,
+                name: userToEdit.name,
+                email: userToEdit.email,
+                password: '', // Don't pre-fill password for security
+                role: userToEdit.role,
+                status: userToEdit.status,
+            });
+        } else {
+            // Reset form for adding new user
+            setFormData({
+                id: 0, // Temporary unique ID
+                name: '',
+                email: '',
+                password: '',
+                role: '0',
+                status: 'Active',
+            });
+        }
+    }, [userToEdit, isOpen]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = () => {
+        // Simple validation
+        if (!formData.name || !formData.email || (!isEditMode && !formData.password)) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+        onSave(formData);
+        saveUser();
+    };
+
+    const loadRoleData = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/LoadAdminRoleData", {
+                method: "GET", credentials: "include",
+            });
+            if (response.ok) {
+                const json = await response.json();
+                setRoles(json);
+            } else {
+                toast.error("LoadAdminRoleData failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Something wrong! Please try again");
+            console.error("LoadAdminRoleData Error:", error);
+        }
+    };
+
+    useEffect(() => {
+        loadRoleData();
+    }, []);
+
+    //add users
+
+    const saveUser = async () => {
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/SaveAdmins", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+
+                    console.log(json.message);
+                    toast.success(json.message);
+                    loadUsers(setUsers, handleCloseModal);
+
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("SaveAdmin failed. Please try again");
+                toast.error("SaveAdmin failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Error connecting to server");
+            console.error("SaveAdmin Error:", error);
+        }
+    };
+
+    //add users
+
+    return (
+        <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>
+                <span className="font-bold text-gray-800">
+                    {isEditMode ? 'Edit User' : 'Add New User'}
+                </span>
+            </DialogTitle>
+            <DialogContent dividers>
+                <div className="space-y-4 py-2">
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Username</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Email</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Password</label>
+                        <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder={isEditMode ? "Leave blank to keep current password" : ""} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Role</label>
+                        <select name="role" value={formData.role} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="0">Select a Role</option>
+                            {roles.map((role) => (
+                                <option key={role.value} value={role.value}>
+                                    {role.value}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* <select
+                            value={newAddress.cityName}
+                            onChange={(e) => setNewAddress({ ...newAddress, cityName: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                            <option value="0">Select a city</option>
+                            {cities.map((city) => (
+                                <option key={city.id} value={city.id}>
+                                    {city.name}
+                                </option>
+                            ))}
+                        </select> */}
+                    </div>
+                </div>
+            </DialogContent>
+            <DialogActions className="p-4 bg-gray-50">
+                <Button onClick={onClose} variant="secondary">Cancel</Button>
+                <Button onClick={handleSave}>{isEditMode ? 'Save Changes' : 'Add User'}</Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
+const loadUsers = async (setUsers: React.Dispatch<React.SetStateAction<User[]>>, handleCloseModal: () => void) => {
+    try {
+        const response = await fetch("http://localhost:8080/Edumart-Backend/LoadAdmins", {
+            method: "GET",
+            credentials: "include",
+        });
+
+        if (response.ok) {
+            const json = await response.json();
+            console.log(json);
+
+            if (json.status) {
+
+                mockUsers = json.adminList.map((admin: any) => ({
+                    id: admin.id,
+                    name: admin.username,
+                    email: admin.email,
+                    role: admin.adminRole.value,
+                    createdAt: new Date(admin.created_at).toLocaleDateString('en-CA'),
+                    password: admin.password,
+                    status: admin.status.value
+                }));
+
+                setUsers(mockUsers);
+                handleCloseModal();
+            } else {
+                toast.error(json.message);
+            }
+        } else {
+            toast.error("LoadAdmins failed. Please try again");
+        }
+    } catch (error) {
+        toast.error("Something wrong with the server!");
+        console.error("LoadAdmins load Error:", error);
+    }
+};
+
+const ManageUsersPage: FC = () => {
+
+    const [users, setUsers] = useState<User[]>(mockUsers);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userToEdit, setUserToEdit] = useState<User | null>(null);
+
+    const handleOpenModal = (user: User | null) => {
+        setUserToEdit(user);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setUserToEdit(null);
+    };
+
+    const handleToggleStatus = async (userId: number) => {
+        setUsers(users.map(user =>
+            user.id === userId
+                ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
+                : user
+        ));
+
+        const updateData = {
+            adminId: userId,
+        };
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/ToggleAdminStatus", {
+                method: "PUT",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updateData)
+            });
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    toast.success("Admin Status Updated !");
+                    loadUsers(setUsers, handleCloseModal);
+                } else {
+                    toast.error(json.message);
+                }
+            } else {
+                toast.error("ToggleAdminStatus failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Something wrong ! Please try again");
+            console.error("ToggleAdminStatus Error:", error);
+        }
+    };
+
+    const handleSaveUser = (userData: Omit<User, 'createdAt'>) => {
+
+    };
+
+    useEffect(() => {
+        loadUsers(setUsers, handleCloseModal);
+    }, []);
+
+    return (
+        <>
+            <Card>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Manage Users</h2>
+                    <Button onClick={() => handleOpenModal(null)}>{Icons.plus} Add User</Button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left table-auto">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-600 text-sm">
+                                <th className="p-3 font-semibold">User</th>
+                                <th className="p-3 font-semibold">Role</th>
+                                <th className="p-3 font-semibold">Created At</th>
+                                <th className="p-3 font-semibold text-center">Status</th>
+                                <th className="p-3 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {users.map(user => (
+                                <tr key={user.id} className="border-b hover:bg-gray-50">
+                                    <td className="p-3">
+                                        <div className="font-medium text-gray-800">{user.name}</div>
+                                        <div className="text-sm text-gray-500">{user.email}</div>
+                                    </td>
+                                    <td className="p-3 text-gray-600">{user.role}</td>
+                                    <td className="p-3 text-gray-600">{user.createdAt}</td>
+                                    <td className="p-3 text-center">
+                                        <Badge color={user.status === 'Active' ? 'green' : 'red'}>{user.status}</Badge>
+                                    </td>
+                                    <td className="p-3">
+                                        <div className="flex justify-center items-center space-x-2">
+                                            <button onClick={() => handleToggleStatus(user.id)} className={classNames("p-2 rounded-full hover:bg-gray-200", user.status === 'Active' ? 'text-green-500' : 'text-red-500')}>{user.status === 'Active' ? Icons.toggleOn : Icons.toggleOff}</button>
+                                            <button onClick={() => handleOpenModal(user)} className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button>
+                                            <button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+
+            <AddEditUserDialog
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSave={handleSaveUser}
+                userToEdit={userToEdit}
+                setUsers={setUsers}
+                handleCloseModal={handleCloseModal}
+            />
+        </>
+    );
+};
 
 const SettingsPage: FC = () => (
     <div><h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2><div className="grid grid-cols-1 lg:grid-cols-3 gap-8"><div className="lg:col-span-2 space-y-8"><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Store Details</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Store Name</label><input type="text" defaultValue="EduMart" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-gray-700 font-medium mb-2">Store Email</label><input type="email" defaultValue="contact@edumart.com" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div></div></Card><Card><h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Currency Options</h3><div className="space-y-4"><div><label className="block text-gray-700 font-medium mb-2">Currency</label><select className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>LKR (Rs)</option><option>USD ($)</option><option>EUR (€)</option></select></div></div></Card></div><div className="lg:col-span-1"><Card><h3 className="text-xl font-bold text-gray-800 mb-4">Save Changes</h3><p className="text-gray-600 mb-4">Click the button below to save all your settings changes.</p><Button className="w-full">Save Settings</Button></Card></div></div></div>
@@ -1296,7 +1828,7 @@ const AdminDashboard: FC = () => {
 
     return (
         <div className="flex h-screen bg-edumartHover/30 font-sans p-6">
-            <Sidebar currentView={view} setView={handleSetView}/>
+            <Sidebar currentView={view} setView={handleSetView} />
             <div className="flex-1 flex flex-col overflow-hidden rounded-r-2xl bg-white shadow-lg">
                 <Header />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">

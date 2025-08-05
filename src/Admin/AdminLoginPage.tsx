@@ -1,4 +1,4 @@
-import React, { useState, FC, SVGProps, FormEvent, ChangeEvent, SyntheticEvent } from 'react';
+import { useState, FC, SVGProps, FormEvent, ChangeEvent, SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 
 // Type for SVG Icon props
