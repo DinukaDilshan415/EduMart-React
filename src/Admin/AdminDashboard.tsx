@@ -7,6 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { LogOut } from 'lucide-react';
 import { Chart, registerables } from 'chart.js';
+import { format } from 'date-fns';
 
 Chart.register(...registerables);
 
@@ -408,7 +409,48 @@ const DashboardPage: FC = () => {
                     if (json.status) {
                         console.log(json);
 
+                        const mockApiData: DashboardData = {
+                            kpis: [
+                                { title: 'Total Revenue', value: `LKR ${json.dashboardData[0]["Total Revenue"]}.00`, trend: '+0%', trendDirection: 'up' },
+                                { title: 'Orders', value: `${json.dashboardData[0]["Orders"]}`, trend: '+0%', trendDirection: 'up' },
+                                { title: 'Customers', value: `${json.dashboardData[0]["Customers"]}`, trend: '+0%', trendDirection: 'up' },
+                                { title: 'Active Products', value: `${json.dashboardData[0]["Active Products"]}`, trend: '+0%', trendDirection: 'up' },
+                            ],
+                            salesData: [...json.dashboardData[3]].reverse().map((order: any) => ({
+                                    label: new Date(order.created_at).toLocaleDateString('en-CA'),
+                                    revenue: order.amount,
+                                })),
+                            // [
+                            //     { label: 'Jul 06', revenue: 15000 },
+                            //     { label: 'Jul 11', revenue: 22000 },
+                            //     { label: 'Jul 16', revenue: 18000 },
+                            //     { label: 'Jul 21', revenue: 27000 },
+                            //     { label: 'Jul 26', revenue: 25000 },
+                            //     { label: 'Jul 31', revenue: 35000 },
+                            //     { label: 'Aug 05', revenue: 45231 }
+                            // ],
+                            topProducts: json.dashboardData[1].map((item: any) => ({
+                                name: item.stock.product.title,
+                                sold: `${item.totalQty} units`,
+                                revenue: `LKR ${item.itemRevenue}.00`,
+                                img: `http://localhost:8080/Edumart-Backend/product-images/${item.stock.product.id}/image1.png`
+                            })),
+                            lowStockItems: json.dashboardData[2].map((item: any) => ({
+                                name: item.product.title,
+                                sku: `${item.price}.00`,
+                                left: item.qty
+                            })),
+                            recentOrders: json.dashboardData[3].map((order: any) => ({
+                                id: order.order_id,
+                                customerName: order.user.username,
+                                total: order.amount,
+                                status: order.orderStatus.value,
+                                date: new Date(order.created_at).toLocaleDateString('en-CA'),
+                            }))
+                        };
 
+                        console.log(mockApiData);
+                        setData(mockApiData);
                     } else {
                         toast.error(json.message);
                     }
@@ -416,39 +458,38 @@ const DashboardPage: FC = () => {
                     toast.error("Dashboard load failed. Please try again");
                 }
 
-                const mockApiData: DashboardData = {
-                    kpis: [
-                        { title: 'Total Revenue', value: 'LKR 45,231.89', trend: '+20.1%', trendDirection: 'up' },
-                        { title: 'Orders', value: '1,830', trend: '+5.2%', trendDirection: 'up' },
-                        { title: 'Customers', value: '156', trend: '-2.8%', trendDirection: 'up' },
-                        { title: 'Active Products', value: '156', trend: '+0.3%', trendDirection: 'up' },
-                    ],
-                    salesData: [
-                        { label: 'Jul 06', revenue: 15000 },
-                        { label: 'Jul 11', revenue: 22000 },
-                        { label: 'Jul 16', revenue: 18000 },
-                        { label: 'Jul 21', revenue: 27000 },
-                        { label: 'Jul 26', revenue: 25000 },
-                        { label: 'Jul 31', revenue: 35000 },
-                        { label: 'Aug 05', revenue: 45231 }
-                    ],
-                    recentOrders: [
-                        { id: '#EDM-8923', customerName: 'Nimal Perera', total: 2450.00, status: 'Delivered', date: 'Aug 05, 2025' },
-                        { id: '#EDM-8922', customerName: 'Fathima Rizwan', total: 1200.50, status: 'Shipped', date: 'Aug 05, 2025' },
-                        { id: '#EDM-8921', customerName: 'S. Kumar', total: 8900.00, status: 'Processing', date: 'Aug 04, 2025' },
-                        { id: '#EDM-8920', customerName: 'Anusha Silva', total: 550.00, status: 'Paid', date: 'Aug 03, 2025' },
-                    ],
-                    topProducts: [
-                        { name: 'Atlas CR Book 120 Pages', sold: '1,230 units', revenue: 'LKR 147,600', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Atlas' },
-                        { name: 'Promate Pen Pack (Blue)', sold: '980 units', revenue: 'LKR 49,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Promate' },
-                        { name: 'A4 Paper Ream (80gsm)', sold: '450 units', revenue: 'LKR 900,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=A4' },
-                    ],
-                    lowStockItems: [
-                        { name: 'School Bag - Grade 5', sku: 'BG-005-B', left: 5 },
-                        { name: 'Whiteboard Marker (Black)', sku: 'MK-WB-01', left: 12 },
-                    ]
-                };
-                setData(mockApiData);
+                // const mockApiData: DashboardData = {
+                //     kpis: [
+                //         { title: 'Total Revenue', value: 'LKR 45,231.89', trend: '+20.1%', trendDirection: 'up' },
+                //         { title: 'Orders', value: '1,830', trend: '+5.2%', trendDirection: 'up' },
+                //         { title: 'Customers', value: '156', trend: '-2.8%', trendDirection: 'up' },
+                //         { title: 'Active Products', value: '156', trend: '+0.3%', trendDirection: 'up' },
+                //     ],
+                //     salesData: [
+                //         { label: 'Jul 06', revenue: 15000 },
+                //         { label: 'Jul 11', revenue: 22000 },
+                //         { label: 'Jul 16', revenue: 18000 },
+                //         { label: 'Jul 21', revenue: 27000 },
+                //         { label: 'Jul 26', revenue: 25000 },
+                //         { label: 'Jul 31', revenue: 35000 },
+                //         { label: 'Aug 05', revenue: 45231 }
+                //     ],
+                //     recentOrders: [
+                //         { id: '#EDM-8923', customerName: 'Nimal Perera', total: 2450.00, status: 'Delivered', date: 'Aug 05, 2025' },
+                //         { id: '#EDM-8922', customerName: 'Fathima Rizwan', total: 1200.50, status: 'Shipped', date: 'Aug 05, 2025' },
+                //         { id: '#EDM-8921', customerName: 'S. Kumar', total: 8900.00, status: 'Processing', date: 'Aug 04, 2025' },
+                //         { id: '#EDM-8920', customerName: 'Anusha Silva', total: 550.00, status: 'Paid', date: 'Aug 03, 2025' },
+                //     ],
+                //     topProducts: [
+                //         { name: 'Atlas CR Book 120 Pages', sold: '1,230 units', revenue: 'LKR 147,600', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Atlas' },
+                //         { name: 'Promate Pen Pack (Blue)', sold: '980 units', revenue: 'LKR 49,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Promate' },
+                //         { name: 'A4 Paper Ream (80gsm)', sold: '450 units', revenue: 'LKR 900,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=A4' },
+                //     ],
+                //     lowStockItems: [
+                //         { name: 'School Bag - Grade 5', sku: 'BG-005-B', left: 5 },
+                //         { name: 'Whiteboard Marker (Black)', sku: 'MK-WB-01', left: 12 },
+                //     ]
+                // };
 
             } catch (error) {
                 toast.error("Failed to load dashboard data.");
@@ -616,7 +657,7 @@ const DashboardPage: FC = () => {
                                 <li key={i} className="flex justify-between items-center">
                                     <div>
                                         <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
-                                        <p className="text-xs text-gray-500">SKU: {item.sku}</p>
+                                        <p className="text-xs text-gray-500">LKR {item.sku}</p>
                                     </div>
                                     <span className={classNames('font-bold text-sm px-3 py-1 rounded-full', item.left <= 5 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')}>
                                         {item.left} left
