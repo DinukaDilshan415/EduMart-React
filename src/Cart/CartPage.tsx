@@ -255,14 +255,42 @@ const CartPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+  //update cart qty
+
+  const updateCartQty = async (id: number, qty: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/UpdateCartQtyFromCart?id=${id}&qty=${qty}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log(json.message);
+          loadCartItems();
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("UpdateCartQtyFromCart failed. Please try again");
+        toast.error("UpdateCartQtyFromCart failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("UpdateCartQtyFromCart Error:", error);
+    }
+  };
+
+  //update cart qty
+
   // Handler to change the quantity of an item
   const handleQuantityChange = (id: number, newQuantity: number) => {
     if (newQuantity < 1) return; // Quantity cannot be less than 1
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+
+    updateCartQty(id, newQuantity);
+
   };
 
   // Handler to remove an item from the cart
@@ -331,8 +359,7 @@ const CartPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const loadCartItems = async () => {
+  const loadCartItems = async () => {
       await saveTempCarts();
       try {
         const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadCartItems`, {
@@ -371,6 +398,7 @@ const CartPage: React.FC = () => {
       }
     };
 
+  useEffect(() => {
     loadCartItems();
   }, []);
 

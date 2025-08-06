@@ -662,10 +662,14 @@ const ProductSearch: React.FC = () => {
             <FilterSidebar
               filters={filters}
               setFilters={setFilters}
-              clearAllFilters={() => { setFilters(initialFilters); setSortBy('default'); }}
+              clearAllFilters={() => {
+                setFilters(initialFilters);
+                setSortBy('default');
+                window.location.href = `/product/search?find=`
+              }}
               handleCategorySelect={handleCategorySelect}
               categories={categories}
-              brands={brands}    
+              brands={brands}
             />
             <main className="flex-1">
               <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
