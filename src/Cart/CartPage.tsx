@@ -306,8 +306,34 @@ const CartPage: React.FC = () => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   }, [cartItems]);
 
+  const saveTempCarts = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/SaveTempCart`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          console.log("Temp Carts Saved");
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("SaveTempCart failed. Please try again");
+        toast.error("SaveTempCart failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("SaveTempCart Error:", error);
+    }
+  };
+
   useEffect(() => {
     const loadCartItems = async () => {
+      await saveTempCarts();
       try {
         const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadCartItems`, {
           method: "GET",

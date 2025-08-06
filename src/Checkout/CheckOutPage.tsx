@@ -205,7 +205,7 @@ const CheckOutPage: React.FC = () => {
         phone: '',
         fullName: '',
         addressLine1: '',
-        city: '',
+        city: '0',
         postalCode: '',
     };
 

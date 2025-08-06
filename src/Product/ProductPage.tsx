@@ -176,11 +176,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => (
           />
         </div>
         <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-20%</div>
-            <a href="#" onClick={(e) => e.preventDefault()} className="absolute inset-0">
-              <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
-                <ShoppingCartIcon className="w-5 h-5" />
-              </button>
-            </a>
+        <a href="#" onClick={(e) => e.preventDefault()} className="absolute inset-0">
+          <button onClick={() => addToCart(String(product.id), 1)} className="absolute bottom-2 right-2 bg-lime-500 text-white p-2 rounded-full hover:bg-lime-600 transition-colors">
+            <ShoppingCartIcon className="w-5 h-5" />
+          </button>
+        </a>
       </div>
       <h4 className="font-medium text-gray-800 mt-3 text-base h-10">{product.name}</h4>
       <div className="flex items-baseline space-x-2 mt-2">
@@ -413,6 +413,37 @@ const ProductPage: React.FC = () => {
     }).format(Number(((priceNum * 100 / (100 - discountNum))).toFixed(2)));
   };
 
+  //buy now process
+
+  const buyNowProcess = async (id: string, qty: number) => {
+
+    try {
+      const response = await fetch(`http://localhost:8080/Edumart-Backend/BuyNowProcess?id=${id}&qty=${qty}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.status) {
+          window.location.href = "/product/cart/checkout";
+
+        } else {
+          console.log(json.message);
+          toast.error(json.message);
+        }
+      } else {
+        console.log("BuyNowProcess failed. Please try again");
+        toast.error("BuyNowProcess failed. Please try again");
+      }
+    } catch (error) {
+      toast.error("Internal Server Error. Please try again later");
+      console.error("BuyNowProcess Error:", error);
+    }
+  };
+
+  //buy now process
+
   return (
     <div className="font-sans bg-white text-gray-800 pt-20">
       <div className="container mx-auto p-4 lg:p-8">
@@ -494,7 +525,7 @@ const ProductPage: React.FC = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => addToCart(String(product.id), quantity)} className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-transform transform hover:scale-105 cursor-pointer">Add to cart</button>
-              <button className="flex-1 bg-lime-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-lime-600 transition-transform transform hover:scale-105 cursor-pointer">Buy Now</button>
+              <button onClick={() => buyNowProcess(String(product.id), quantity)} className="flex-1 bg-lime-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-lime-600 transition-transform transform hover:scale-105 cursor-pointer">Buy Now</button>
             </div>
             <hr className="my-6" />
             <div className="text-sm text-gray-600 space-y-2">

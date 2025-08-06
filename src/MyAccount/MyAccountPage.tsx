@@ -138,13 +138,7 @@ const MyAccountPage = () => {
     id: 0, type: "", full_name: "", mobile: "", address: "", cityName: "0", postal_code: "", isDefault: false,
   });
 
-  const [orders, setOrders] = useState<Order[]>([
-    { id: '#ORD001', date: '2024-07-15', status: 'Delivered', total: '$129.99', items: 3 },
-    { id: '#ORD002', date: '2024-07-10', status: 'Shipped', total: '$89.50', items: 2 },
-    { id: '#ORD003', date: '2024-07-05', status: 'Processing', total: '$199.99', items: 4 },
-    { id: '#ORD004', date: '2024-07-01', status: 'Paid', total: '$45.00', items: 1 },
-    { id: '#ORD005', date: '2024-06-30', status: 'Pending', total: '$59.99', items: 1 },
-  ]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItem[]>([]);
   const [isLoadingOrderItems, setIsLoadingOrderItems] = useState(false);
 
