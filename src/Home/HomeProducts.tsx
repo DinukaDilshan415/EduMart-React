@@ -42,50 +42,19 @@ interface ProductCarouselProps {
 
 // --- MOCK DATA ---
 
-const popularCategories: PopularCategory[] = [
+let popularCategories: PopularCategory[] = [
   { name: 'Photocopy Papers', image: 'https://i.imgur.com/s6yL2sB.png' },
   { name: 'CR Books', image: 'https://i.imgur.com/rE3v2xS.png' },
   { name: 'B5 Books', image: 'https://i.imgur.com/s6yL2sB.png' },
-  { name: 'Exercise Books', image: 'https://i.imgur.com/rE3v2xS.png' },
-  { name: 'School Stationery', image: 'https://i.imgur.com/s6yL2sB.png' },
-  { name: 'Kids Practical', image: 'https://i.imgur.com/rE3v2xS.png' },
-  { name: 'Office Stationery', image: 'https://i.imgur.com/s6yL2sB.png' },
-  { name: 'Notebooks & Notepads', image: 'https://i.imgur.com/rE3v2xS.png' },
-  { name: 'Publications', image: 'https://i.imgur.com/s6yL2sB.png' },
-  { name: 'Writing Tools', image: 'https://i.imgur.com/rE3v2xS.png' },
-  { name: 'Adhesives', image: 'https://i.imgur.com/s6yL2sB.png' },
+  // { name: 'Exercise Books', image: 'https://i.imgur.com/rE3v2xS.png' },
+  // { name: 'School Stationery', image: 'https://i.imgur.com/s6yL2sB.png' },
+  // { name: 'Kids Practical', image: 'https://i.imgur.com/rE3v2xS.png' },
+  // { name: 'Office Stationery', image: 'https://i.imgur.com/s6yL2sB.png' },
+  // { name: 'Notebooks & Notepads', image: 'https://i.imgur.com/rE3v2xS.png' },
+  // { name: 'Publications', image: 'https://i.imgur.com/s6yL2sB.png' },
+  // { name: 'Writing Tools', image: 'https://i.imgur.com/rE3v2xS.png' },
+  // { name: 'Adhesives', image: 'https://i.imgur.com/s6yL2sB.png' },
 ];
-
-// let productSections: ProductSection[] = [
-//   {
-//     title: 'Books',
-//     subCategories: ['School Companion Books', 'Drawing Books', 'CR Science Range'],
-//     products: [
-//       {
-//         id: 13,
-//         name: 'ProMate Exercise Book Single Ruled 200 Pages',
-//         img: 'https://i.imgur.com/6XwYj2Q.png',
-//         price: '248.00',
-//         oldPrice: '310.00',
-//         discount: 20,
-//       },
-//     ]
-//   },
-//   {
-//     title: 'School Stationery',
-//     subCategories: ['Pencils', 'Geometric Tools', 'General Purpose'],
-//     products: [
-//       {
-//         id: 1,
-//         name: 'HB Pencil Rose Pink 12Pcs Pack',
-//         img: 'https://i.imgur.com/3f4y4hN.png',
-//         price: '384.00',
-//         oldPrice: '480.00',
-//         discount: 20,
-//       },
-//     ],
-//   },
-// ];
 
 
 // --- SVG ICONS ---
@@ -304,6 +273,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ section }) => {
 // --- MAIN COMPONENT ---
 const HomeProducts: React.FC = () => {
   const [productSections, setProductSections] = useState<ProductSection[]>([]);
+  const [populerCategories, setPopulerCategories] = useState<PopularCategory[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -360,6 +330,40 @@ const HomeProducts: React.FC = () => {
       }
     };
 
+    const loadPopulerCategories = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadPopulerCategories`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json.status) {
+            console.log(json);
+
+            const items = json.categories.map((item: any) => ({
+              name: item.name, 
+              image: item.image
+            }));
+
+            setPopulerCategories(items);
+
+          } else {
+            console.log(json.message);
+            toast.error(json.message);
+          }
+        } else {
+          console.log("LoadPopulerCategories failed. Please try again");
+          toast.error("LoadPopulerCategories failed. Please try again");
+        }
+      } catch (error) {
+        toast.error("Internal Server Error. Please try again later");
+        console.error("LoadPopulerCategories Error:", error);
+      }
+    };
+
+    loadPopulerCategories();
     loadProducts();
     checkSessionCart();
     return () => {
@@ -374,7 +378,7 @@ const HomeProducts: React.FC = () => {
       <section className="mb-10">
         <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 px-2 sm:px-0">Popular Categories</h2>
         <div className="flex items-start gap-4 p-2 -m-2 overflow-x-auto">
-          {popularCategories.map((category) => (
+          {populerCategories.map((category) => (
             <PopularCategoryCard key={category.name} category={category} />
           ))}
         </div>

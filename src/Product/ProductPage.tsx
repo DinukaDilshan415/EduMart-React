@@ -119,7 +119,7 @@ const ChevronRightIcon: React.FC<IconProps> = ({ className }) => (
 
 
 // --- Placeholder Data & URLs ---
-const promoImageUrl = "https://i.imgur.com/eBw1M5I.png";
+const promoImageUrl = "https://github.com/DinukaDilshan415/images/blob/main/Gemini_Generated_Image_1ui7ir1ui7ir1ui7.png?raw=true";
 const kokopayLogoUrl = "https://www.promateworld.com/images/koko.png";
 
 // --- Sub-components ---

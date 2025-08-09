@@ -95,7 +95,13 @@ const AdminVerificationPage: React.FC = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     reSendEmail();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const verifyAccount = async () => {

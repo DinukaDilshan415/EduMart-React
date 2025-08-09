@@ -7,7 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { LogOut } from 'lucide-react';
 import { Chart, registerables } from 'chart.js';
-import { format } from 'date-fns';
+import { useReactToPrint } from "react-to-print";
 
 Chart.register(...registerables);
 
@@ -93,16 +93,18 @@ type Order = {
 };
 
 type ProductData = {
+    id: number | string;
     name: string;
     description: string;
     brand_id: number | string;
     stock: number | string;
     price: number | string;
     discount: number | string;
-    image: File | null;
+    image: String | File | null;
     mainCategory: string;
     category: string;
     subCategory: string;
+    sub_category_id: number | string;
 };
 
 type User = {
@@ -199,17 +201,34 @@ const Icons = {
 };
 
 // --- UI Components ---
-const Card: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => (
-    <div className={classNames("bg-white p-6 rounded-lg shadow-sm", className)}>
-        {children}
-    </div>
-);
+const Card: FC<{ children: ReactNode; className?: string; title?: string }> = ({ children, className, title }) => {
+
+    return (
+        <div
+            className={classNames(
+                "p-6 rounded-lg shadow-sm",
+                title == "Total Revenue"
+                    ? "bg-red-100"
+                    : title == "Orders"
+                        ? "bg-orange-100"
+                        : title == 'Customers'
+                            ? "bg-cyan-100"
+                            : title == 'Active Products'
+                                ? "bg-purple-100"
+                                : "bg-white",
+                className
+            )}
+        >
+            {children}
+        </div>
+    );
+};
 
 const Button: FC<{ onClick?: () => void; children: ReactNode; variant?: 'primary' | 'secondary' | 'danger'; className?: string, type?: 'button' | 'submit' }> = ({ onClick, children, variant = 'primary', className, type = 'button' }) => {
     const baseClasses = "px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer";
     const variantClasses = {
         primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-        secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
+        secondary: 'bg-slate-300 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
         danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     };
     return (
@@ -417,18 +436,9 @@ const DashboardPage: FC = () => {
                                 { title: 'Active Products', value: `${json.dashboardData[0]["Active Products"]}`, trend: '+0%', trendDirection: 'up' },
                             ],
                             salesData: [...json.dashboardData[3]].reverse().map((order: any) => ({
-                                    label: new Date(order.created_at).toLocaleDateString('en-CA'),
-                                    revenue: order.amount,
-                                })),
-                            // [
-                            //     { label: 'Jul 06', revenue: 15000 },
-                            //     { label: 'Jul 11', revenue: 22000 },
-                            //     { label: 'Jul 16', revenue: 18000 },
-                            //     { label: 'Jul 21', revenue: 27000 },
-                            //     { label: 'Jul 26', revenue: 25000 },
-                            //     { label: 'Jul 31', revenue: 35000 },
-                            //     { label: 'Aug 05', revenue: 45231 }
-                            // ],
+                                label: new Date(order.created_at).toLocaleDateString('en-CA'),
+                                revenue: order.amount,
+                            })),
                             topProducts: json.dashboardData[1].map((item: any) => ({
                                 name: item.stock.product.title,
                                 sold: `${item.totalQty} units`,
@@ -457,39 +467,6 @@ const DashboardPage: FC = () => {
                 } else {
                     toast.error("Dashboard load failed. Please try again");
                 }
-
-                // const mockApiData: DashboardData = {
-                //     kpis: [
-                //         { title: 'Total Revenue', value: 'LKR 45,231.89', trend: '+20.1%', trendDirection: 'up' },
-                //         { title: 'Orders', value: '1,830', trend: '+5.2%', trendDirection: 'up' },
-                //         { title: 'Customers', value: '156', trend: '-2.8%', trendDirection: 'up' },
-                //         { title: 'Active Products', value: '156', trend: '+0.3%', trendDirection: 'up' },
-                //     ],
-                //     salesData: [
-                //         { label: 'Jul 06', revenue: 15000 },
-                //         { label: 'Jul 11', revenue: 22000 },
-                //         { label: 'Jul 16', revenue: 18000 },
-                //         { label: 'Jul 21', revenue: 27000 },
-                //         { label: 'Jul 26', revenue: 25000 },
-                //         { label: 'Jul 31', revenue: 35000 },
-                //         { label: 'Aug 05', revenue: 45231 }
-                //     ],
-                //     recentOrders: [
-                //         { id: '#EDM-8923', customerName: 'Nimal Perera', total: 2450.00, status: 'Delivered', date: 'Aug 05, 2025' },
-                //         { id: '#EDM-8922', customerName: 'Fathima Rizwan', total: 1200.50, status: 'Shipped', date: 'Aug 05, 2025' },
-                //         { id: '#EDM-8921', customerName: 'S. Kumar', total: 8900.00, status: 'Processing', date: 'Aug 04, 2025' },
-                //         { id: '#EDM-8920', customerName: 'Anusha Silva', total: 550.00, status: 'Paid', date: 'Aug 03, 2025' },
-                //     ],
-                //     topProducts: [
-                //         { name: 'Atlas CR Book 120 Pages', sold: '1,230 units', revenue: 'LKR 147,600', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Atlas' },
-                //         { name: 'Promate Pen Pack (Blue)', sold: '980 units', revenue: 'LKR 49,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=Promate' },
-                //         { name: 'A4 Paper Ream (80gsm)', sold: '450 units', revenue: 'LKR 900,000', img: 'https://placehold.co/48x48/e2e8f0/334155?text=A4' },
-                //     ],
-                //     lowStockItems: [
-                //         { name: 'School Bag - Grade 5', sku: 'BG-005-B', left: 5 },
-                //         { name: 'Whiteboard Marker (Black)', sku: 'MK-WB-01', left: 12 },
-                //     ]
-                // };
 
             } catch (error) {
                 toast.error("Failed to load dashboard data.");
@@ -585,7 +562,7 @@ const DashboardPage: FC = () => {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {data.kpis.map((kpi) => (
-                    <Card key={kpi.title}>
+                    <Card key={kpi.title} title={kpi.title}>
                         <h3 className="text-gray-500 font-medium">{kpi.title}</h3>
                         <p className="text-3xl font-bold text-gray-800 mt-2">{kpi.value}</p>
                         <p className={classNames("text-sm mt-1 flex items-center", kpi.trendDirection === 'up' ? 'text-green-500' : 'text-red-500')}>
@@ -769,13 +746,20 @@ const ProductList: FC<{ setView: SetViewFn }> = ({ setView }) => {
         }
     };
 
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+    })
+
     return (
         <Card>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Product List</h2>
+                <Button onClick={handlePrint} className='mb-6' variant='secondary'>Print Products</Button>
                 <Button onClick={() => setView('products/add')}>{Icons.plus} Add Product</Button>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" ref={printRef}>
                 <table className="w-full text-left table-auto">
                     <thead>
                         <tr className="bg-gray-100 text-gray-600 text-sm">
@@ -840,16 +824,18 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ s
     };
 
     const [productData, setProductData] = useState<ProductData>({
+        id: product?.id || '',
         name: product?.name || '',
         description: product?.description || '',
         brand_id: product?.brand_id || 0,
         stock: product?.stock || 0,
         price: product?.price || 0,
         discount: product?.discount || 0,
-        image: null,
+        image: `http://localhost:8080/Edumart-Backend/product-images/${product?.id}/image1.png`,
         mainCategory: '',
         category: '',
-        subCategory: ''
+        subCategory: '',
+        sub_category_id: product?.sub_category_id || 0,
     });
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -924,6 +910,38 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ s
         }
     };
 
+    const updateDetailsOfProduct = async () => {
+        const formData = new FormData();
+        Object.entries(productData).forEach(([key, value]) => {
+            if (value !== null) {
+                formData.append(key, value instanceof File ? value : String(value));
+            }
+        });
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/UpdateProductDetails", {
+                method: "POST",
+                credentials: "include",
+                body: formData
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+                    toast.success("Product Details Updated");
+                    setView('products/list');
+                } else {
+                    toast.error(json.message);
+                }
+            } else {
+                toast.error("UpdateProductDetails failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Internal Server Error. Please try again later");
+            console.error("UpdateProductDetails Error:", error);
+        }
+    };
+
     const [open, setOpen] = useState(false);
     const handleClickOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -939,37 +957,41 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ s
     };
 
     const checkProductStock = async () => {
-        const formData = new FormData();
-        Object.entries(productData).forEach(([key, value]) => {
-            if (value !== null) {
-                formData.append(key, value instanceof File ? value : String(value));
-            }
-        });
-
-        try {
-            const response = await fetch("http://localhost:8080/Edumart-Backend/StockCheck", {
-                method: "POST",
-                credentials: "include",
-                body: formData
+        if (isEditMode) {
+            updateDetailsOfProduct();
+        } else {
+            const formData = new FormData();
+            Object.entries(productData).forEach(([key, value]) => {
+                if (value !== null) {
+                    formData.append(key, value instanceof File ? value : String(value));
+                }
             });
 
-            if (response.ok) {
-                const json = await response.json();
-                if (json.status) {
-                    if (json.message === "UpdateProduct") {
-                        handleClickOpen();
-                    } else if (json.message === "InsertProduct") {
-                        saveProduct();
+            try {
+                const response = await fetch("http://localhost:8080/Edumart-Backend/StockCheck", {
+                    method: "POST",
+                    credentials: "include",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const json = await response.json();
+                    if (json.status) {
+                        if (json.message === "UpdateProduct") {
+                            handleClickOpen();
+                        } else if (json.message === "InsertProduct") {
+                            saveProduct();
+                        }
+                    } else {
+                        toast.error(json.message);
                     }
                 } else {
-                    toast.error(json.message);
+                    toast.error("Stock check failed. Please try again");
                 }
-            } else {
-                toast.error("Stock check failed. Please try again");
+            } catch (error) {
+                toast.error("Internal Server Error. Please try again later");
+                console.error("Stock check Error:", error);
             }
-        } catch (error) {
-            toast.error("Internal Server Error. Please try again later");
-            console.error("Stock check Error:", error);
         }
     };
 
@@ -981,7 +1003,7 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ s
                     <div className="md:col-span-2 space-y-6">
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Product Name</label>
-                            <input type="text" value={productData.name} onChange={(e) => setProductData({ ...productData, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" />
+                            <input type="text" value={productData.name} onChange={(e) => setProductData({ ...productData, name: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., HB Pencil Box" disabled={isEditMode != undefined && isEditMode > 0} readOnly={isEditMode != undefined && isEditMode > 0} />
                         </div>
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Description</label>
@@ -998,19 +1020,46 @@ const AddEditProduct: FC<{ setView: SetViewFn; params?: { id: number } }> = ({ s
                 </div>
                 <h3 className="text-lg font-semibold text-gray-700 mt-8 mb-4 border-b pb-2">Categorization</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Main Category</label><select onChange={(e) => { setSelectedMainCat(Number(e.target.value)); setSelectedCat(null); }} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>Select Main Category</option>{mockMainCategories.map(mc => <option key={mc.id} value={mc.id}>{mc.name}</option>)}</select></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Category</label><select onChange={(e) => setSelectedCat(Number(e.target.value))} disabled={!selectedMainCat} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Category</option>{availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Sub Category</label><select disabled={!selectedCat} value={productData.subCategory} onChange={(e) => setProductData({ ...productData, subCategory: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Sub Category</option>{availableSubCats.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}</select></div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Main Category</label>
+                        <select disabled={isEditMode != undefined && isEditMode > 0} onChange={(e) => { setSelectedMainCat(Number(e.target.value)); setSelectedCat(null); }} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option>Select Main Category</option>{mockMainCategories.map(mc => <option key={mc.id} value={mc.id}>{mc.name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Category</label>
+                        <select onChange={(e) => setSelectedCat(Number(e.target.value))} disabled={!selectedMainCat} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Category</option>{availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Sub Category</label>
+                        <select disabled={!selectedCat} value={productData.subCategory} onChange={(e) => setProductData({ ...productData, subCategory: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100"><option>Select Sub Category</option>{availableSubCats.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
+                        </select>
+                    </div>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-700 mt-8 mb-4 border-b pb-2">Details, Pricing & Stock</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Brand</label><select value={productData.brand_id} onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option value={0}>Select Brand</option>{mockBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Stock Quantity</label><input type="number" value={productData.stock} onChange={(e) => setProductData({ ...productData, stock: e.target.value })} min="0" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Brand</label>
+                        <select disabled={isEditMode != undefined && isEditMode > 0} value={productData.brand_id} onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"><option value={0}>Select Brand</option>{mockBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                    </div>
+                    <div><label className="block text-gray-700 font-medium mb-2">Stock Quantity</label>
+                        <input type="number" value={productData.stock} onChange={(e) => setProductData({ ...productData, stock: e.target.value })} min="0" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div><label className="block text-gray-700 font-medium mb-2">Price (LKR)</label><input type="number" value={productData.price} onChange={(e) => setProductData({ ...productData, price: e.target.value })} min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Discount (%)</label><input type="number" value={productData.discount} onChange={(e) => setProductData({ ...productData, discount: e.target.value })} min="0" max="100" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                    <div><label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label><input type="text" value={displayPrice()} className="w-full px-4 py-2 border rounded-lg bg-gray-100" disabled /></div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Price (LKR)</label>
+                        <input disabled={isEditMode != undefined && isEditMode > 0} type="number" value={productData.price} onChange={(e) => setProductData({ ...productData, price: e.target.value })} min="0" step="0.01" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Discount (%)</label>
+                        <input disabled={isEditMode != undefined && isEditMode > 0} type="number" value={productData.discount} onChange={(e) => setProductData({ ...productData, discount: e.target.value })} min="0" max="100" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Display Price (LKR)</label>
+                        <input type="text" value={displayPrice()} className="w-full px-4 py-2 border rounded-lg bg-gray-100" disabled />
+                    </div>
                 </div>
                 <div className="mt-8 flex justify-end gap-4">
                     <Button className='cursor-pointer' type="button" variant="secondary" onClick={() => setView('products/list')}>Cancel</Button>
@@ -1060,24 +1109,97 @@ const ManageCategories: FC<{ setView: SetViewFn }> = () => {
     );
 };
 
-const ManageBrands: FC<{ setView: SetViewFn }> = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="md:col-span-2">
-        <Card>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Product Brands</h2>
-            <table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Brand Name</th><th className="p-3 font-semibold text-center">Products</th><th className="p-3 font-semibold text-center">Actions</th></tr></thead><tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-gray-800">{brand.name}</td><td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td><td className="p-3"><div className="flex justify-center items-center space-x-2"><button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button><button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button></div></td></tr>))}</tbody></table>
-        </Card>
-    </div>
-        <div>
-            <Card>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Add New Brand</h3>
-                <form className="space-y-4">
-                    <div><label className="block text-gray-700 font-medium mb-2">Brand Name</label><input type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" /></div>
-                    <div><Button className="w-full">Add Brand</Button></div>
-                </form>
-            </Card>
+const ManageBrands: FC<{ setView: SetViewFn }> = ({ setView }) => {
+    const [brandName, setBrandName] = useState("");
+
+    const saveNewBrand = async () => {
+        const brandData = {
+            brandName
+        };
+
+        try {
+            const response = await fetch("http://localhost:8080/Edumart-Backend/SaveNewBrand", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(brandData)
+            });
+
+            if (response.ok) {
+                const json = await response.json();
+                if (json.status) {
+
+                    window.location.reload();
+
+                    console.log(json);
+                } else {
+                    console.log(json.message);
+                    toast.error(json.message);
+                }
+            } else {
+                console.log("SaveNewBrand failed. Please try again");
+                toast.error("SaveNewBrand failed. Please try again");
+            }
+        } catch (error) {
+            toast.error("Error connecting to server");
+            console.error("SaveNewBrand Error:", error);
+        }
+    };
+
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+    });
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2" ref={printRef}>
+                <Card>
+                    <div className='flex justify-between'>
+                        <span className="text-2xl font-bold text-gray-800 mb-6">Product Brands</span>
+                        <Button onClick={handlePrint} className='mb-6' variant='secondary'>Print Brands</Button>
+                    </div>
+                    <table className="w-full text-left table-auto">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-600 text-sm">
+                                <th className="p-3 font-semibold">Brand Name</th>
+                                <th className="p-3 font-semibold text-center">Products</th>
+                                <th className="p-3 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>{mockBrands.map(brand => (<tr key={brand.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-medium text-gray-800">{brand.name}</td>
+                            <td className="p-3 text-center text-gray-600">{mockProducts.filter(p => p.brand_id === brand.id).length}</td>
+                            <td className="p-3"><div className="flex justify-center items-center space-x-2">
+                                <button className="p-2 rounded-full text-gray-500 hover:text-blue-600 hover:bg-gray-200">{Icons.edit}</button>
+                                <button className="p-2 rounded-full text-gray-500 hover:text-red-600 hover:bg-gray-200">{Icons.trash}</button>
+                            </div>
+                            </td>
+                        </tr>))}
+                        </tbody>
+                    </table>
+                </Card>
+            </div>
+            <div>
+                <Card>
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Add New Brand</h3>
+                    <form className="space-y-4">
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Brand Name</label>
+                            <input value={brandName} onChange={e => setBrandName(e.target.value)} type="text" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Faber-Castell" />
+                        </div>
+                        <div>
+                            <Button onClick={saveNewBrand} className="w-full">Add Brand</Button>
+                        </div>
+                    </form>
+                </Card>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- ORDER DETAILS DIALOG COMPONENT ---
 interface OrderDetailsDialogProps {
@@ -1220,13 +1342,9 @@ const OrdersPage: FC = () => {
 
             console.log(json);
 
-            // --- DATA TRANSFORMATION LOGIC ---
-
             if (json && json.invoiceList && json.invoiceItemsList) {
                 const { invoiceList, invoiceItemsList } = json;
 
-                // 1. Create a map of order items for quick lookup.
-                // The key will be the order_id (e.g., "#0001"), and the value will be an array of OrderItem.
                 const itemsMap = invoiceItemsList.reduce((acc: { [key: string]: OrderItem[] }, group: any) => {
                     acc[group.orderId] = group.invoiceItemses.map((item: any) => ({
                         productId: item.stock.product.id,
@@ -1239,23 +1357,20 @@ const OrdersPage: FC = () => {
                     return acc;
                 }, {});
 
-                // 2. Process the main invoiceList to create the final data structures.
                 const formattedOrders: Order[] = [];
                 const formattedOrderDetails: { [key: string]: OrderDetails } = {};
 
                 invoiceList.forEach((invoice: any) => {
                     const orderId = invoice.order_id;
 
-                    // Create the Order summary object for the main table
                     formattedOrders.push({
                         id: orderId,
                         customerName: invoice.user.email + " ( " + invoice.user.username + " ) ",
-                        date: new Date(invoice.created_at).toLocaleDateString('en-CA'), // Format date for consistency
+                        date: new Date(invoice.created_at).toLocaleDateString('en-CA'),
                         total: invoice.amount,
                         status: invoice.orderStatus.value,
                     });
 
-                    // Create the full OrderDetails object for the dialog
                     formattedOrderDetails[orderId] = {
                         billingAddress: {
                             fullName: invoice.userAddress.full_name,
@@ -1271,11 +1386,10 @@ const OrdersPage: FC = () => {
                             postalCode: invoice.giftAddress.postal_code,
                             note: invoice.giftAddress.note,
                         } : null,
-                        items: itemsMap[orderId] || [], // Get the items from our map
+                        items: itemsMap[orderId] || [],
                     };
                 });
 
-                // 3. Set the state with our newly formatted data!
                 setOrders(formattedOrders);
                 setOrderDetails(formattedOrderDetails);
             }
@@ -1322,48 +1436,57 @@ const OrdersPage: FC = () => {
         }
     };
 
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+    })
+
     return (
         <>
+            <Button onClick={handlePrint} className='mb-6' variant='secondary'>Print Orders</Button>
             <Card>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Orders</h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left table-auto">
-                        <thead>
-                            <tr className="bg-gray-100 text-gray-600 text-sm">
-                                <th className="p-3 font-semibold">Order ID</th>
-                                <th className="p-3 font-semibold text-center">Customer</th>
-                                <th className="p-3 font-semibold text-center">Date</th>
-                                <th className="p-3 font-semibold text-center">Total</th>
-                                <th className="p-3 font-semibold text-center">Status</th>
-                                <th className="p-3 font-semibold text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map(order => (
-                                <tr key={order.id} className="border-b hover:bg-gray-50">
-                                    <td className="p-3 font-medium text-blue-600">{order.id}</td>
-                                    <td className="p-3 text-gray-800 text-center">{order.customerName}</td>
-                                    <td className="p-3 text-gray-600 text-center">{order.date}</td>
-                                    <td className="p-3 text-center font-medium text-gray-800">LKR {order.total.toFixed(2)}</td>
-                                    <td className="p-3 text-center">
-                                        <select
-                                            value={order.status}
-                                            onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                                            className={classNames(
-                                                'border-gray-300 rounded-full text-xs font-semibold text-center focus:ring-2 focus:ring-blue-500 py-1 pl-3 pr-8 cursor-pointer appearance-none',
-                                                `bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800`
-                                            )}
-                                        >
-                                            {orderStatuses.map(status => <option key={status} value={status}>{status}</option>)}
-                                        </select>
-                                    </td>
-                                    <td className="p-3 text-center flex justify-center items-center">
-                                        <Button onClick={() => handleViewDetails(order)} variant="secondary" className="text-xs py-1 px-3 cursor-pointer">View Details</Button>
-                                    </td>
+                <div ref={printRef}>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Orders</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left table-auto">
+                            <thead>
+                                <tr className="bg-gray-100 text-gray-600 text-sm">
+                                    <th className="p-3 font-semibold">Order ID</th>
+                                    <th className="p-3 font-semibold text-center">Customer</th>
+                                    <th className="p-3 font-semibold text-center">Date</th>
+                                    <th className="p-3 font-semibold text-center">Total</th>
+                                    <th className="p-3 font-semibold text-center">Status</th>
+                                    <th className="p-3 font-semibold text-center">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {orders.map(order => (
+                                    <tr key={order.id} className="border-b hover:bg-gray-50">
+                                        <td className="p-3 font-medium text-blue-600">{order.id}</td>
+                                        <td className="p-3 text-gray-800 text-center">{order.customerName}</td>
+                                        <td className="p-3 text-gray-600 text-center">{order.date}</td>
+                                        <td className="p-3 text-center font-medium text-gray-800">LKR {order.total.toFixed(2)}</td>
+                                        <td className="p-3 text-center">
+                                            <select
+                                                value={order.status}
+                                                onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
+                                                className={classNames(
+                                                    'border-gray-300 rounded-full text-xs font-semibold text-center focus:ring-2 focus:ring-blue-500 py-1 pl-3 pr-8 cursor-pointer appearance-none',
+                                                    `bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800`
+                                                )}
+                                            >
+                                                {orderStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                                            </select>
+                                        </td>
+                                        <td className="p-3 text-center flex justify-center items-center">
+                                            <Button onClick={() => handleViewDetails(order)} variant="secondary" className="text-xs py-1 px-3 cursor-pointer">View Details</Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </Card>
 
@@ -1417,32 +1540,45 @@ const CustomersPage: FC = () => {
         loadCustomers();
     }, []);
 
-    return (<Card>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Customers</h2>
-        <div className="overflow-x-auto">
-            <table className="w-full text-left table-auto">
-                <thead>
-                    <tr className="bg-gray-100 text-gray-600 text-sm">
-                        <th className="p-3 font-semibold">Name</th>
-                        <th className="p-3 font-semibold text-center">Email</th>
-                        <th className="p-3 font-semibold text-center">Mobile Number</th>
-                        <th className="p-3 font-semibold text-center">Joined On</th>
-                        <th className="p-3 font-semibold text-center">Orders</th>
-                        <th className="p-3 font-semibold text-right">Total Spent</th>
-                    </tr>
-                </thead>
-                <tbody>{customers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 font-medium text-gray-800">{customer.name}</td>
-                    <td className="p-3 text-gray-600 text-center">{customer.email}</td>
-                    <td className="p-3 text-gray-600 text-center">{customer.mobile}</td>
-                    <td className="p-3 text-gray-600 text-center">{customer.joinDate}</td>
-                    <td className="p-3 text-center text-gray-600">{customer.orderCount}</td>
-                    <td className="p-3 text-right font-medium text-gray-800">LKR {customer.totalSpent.toFixed(2)}</td>
-                </tr>))}
-                </tbody>
-            </table>
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+    })
+
+    return (
+        <div ref={printRef}>
+            <Card>
+                <div className='flex justify-between'>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Customers</h2>
+                    <Button onClick={handlePrint} className='mb-6' variant='secondary'>Print Customers</Button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left table-auto">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-600 text-sm">
+                                <th className="p-3 font-semibold">Name</th>
+                                <th className="p-3 font-semibold text-center">Email</th>
+                                <th className="p-3 font-semibold text-center">Mobile Number</th>
+                                <th className="p-3 font-semibold text-center">Joined On</th>
+                                <th className="p-3 font-semibold text-center">Orders</th>
+                                <th className="p-3 font-semibold text-right">Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>{customers.map(customer => (<tr key={customer.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-medium text-gray-800">{customer.name}</td>
+                            <td className="p-3 text-gray-600 text-center">{customer.email}</td>
+                            <td className="p-3 text-gray-600 text-center">{customer.mobile}</td>
+                            <td className="p-3 text-gray-600 text-center">{customer.joinDate}</td>
+                            <td className="p-3 text-center text-gray-600">{customer.orderCount}</td>
+                            <td className="p-3 text-right font-medium text-gray-800">LKR {customer.totalSpent.toFixed(2)}</td>
+                        </tr>))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
         </div>
-    </Card>);
+    );
 };
 
 const ReviewsPage: FC = () => {
@@ -1458,10 +1594,41 @@ const InventoryPage: FC = () => {
         if (stock < 10) return <Badge color="yellow">Low Stock</Badge>;
         return <Badge color="green">In Stock</Badge>;
     };
+
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+    })
+
     return (
         <Card>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Inventory Management</h2>
-            <div className="overflow-x-auto"><table className="w-full text-left table-auto"><thead><tr className="bg-gray-100 text-gray-600 text-sm"><th className="p-3 font-semibold">Product</th><th className="p-3 font-semibold text-center">Stock Level</th><th className="p-3 font-semibold text-center">Status</th></tr></thead><tbody>{mockProducts.map(product => (<tr key={product.id} className="border-b hover:bg-gray-50"><td className="p-3"><div className="flex items-center gap-4"><img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-md object-cover" /><span className="font-medium text-gray-800">{product.name}</span></div></td><td className="p-3 text-center font-bold text-lg">{product.stock}</td><td className="p-3 text-center">{getStockStatus(product.stock)}</td></tr>))}</tbody></table></div>
+            <div className='flex justify-between'>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Inventory Management</h2>
+                <Button onClick={handlePrint} className='mb-6' variant='secondary'>Print Inventry</Button>
+            </div>
+            <div className="overflow-x-auto" ref={printRef}>
+                <table className="w-full text-left table-auto">
+                    <thead>
+                        <tr className="bg-gray-100 text-gray-600 text-sm">
+                            <th className="p-3 font-semibold">Product</th>
+                            <th className="p-3 font-semibold text-center">Stock Level</th>
+                            <th className="p-3 font-semibold text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>{mockProducts.map(product => (<tr key={product.id} className="border-b hover:bg-gray-50">
+                        <td className="p-3"><div className="flex items-center gap-4">
+                            <img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-md object-cover" />
+                            <span className="font-medium text-gray-800">{product.name}
+                            </span>
+                        </div>
+                        </td>
+                        <td className="p-3 text-center font-bold text-lg">{product.stock}</td>
+                        <td className="p-3 text-center">{getStockStatus(product.stock)}</td>
+                    </tr>))}
+                    </tbody>
+                </table>
+            </div>
         </Card>
     );
 };

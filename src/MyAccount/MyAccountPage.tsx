@@ -650,7 +650,7 @@ const MyAccountPage = () => {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={newAddress.isDefault}
@@ -658,7 +658,7 @@ const MyAccountPage = () => {
                 className="h-4 w-4 text-green-600"
               />
               <label className="text-sm text-gray-600">Set as default address</label>
-            </div>
+            </div> */}
             <div className="flex gap-2">
               <button onClick={saveNewAddress}
                 type="submit"
@@ -693,7 +693,7 @@ const MyAccountPage = () => {
                 )}
               </div>
               <button
-                onClick={() => handleDeleteAddress(address.id)}
+                // onClick={() => handleDeleteAddress(address.id)}
                 className="text-red-500 hover:text-red-700"
               >
                 <X size={16} />
