@@ -10,7 +10,9 @@ import {
   Eye,
   EyeOff,
   Save,
-  X
+  X,
+  MessageSquareHeart,
+  Star
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
@@ -69,12 +71,18 @@ interface OrderItem {
   quantity: number;
   price: string;
   imageUrl: string;
+  status: string;
 }
 
 interface InvoiceItemsEntry {
   orderId: string;
   itemsCount: number;
   invoiceItemses: any[];
+}
+
+interface ReviewData {
+  rating: number;
+  reviewText: string;
 }
 
 // --- INLINE CONFIRM TOAST COMPONENT ---
@@ -260,7 +268,7 @@ const MyAccountPage = () => {
 
   //load Orders
 
-  const fetchOrderDetails = async (orderId: string) => {
+  const fetchOrderDetails = async (orderId: string, status: string) => {
 
     setIsLoadingOrderItems(true);
     setShowOrderDetailsModal(true);
@@ -279,6 +287,7 @@ const MyAccountPage = () => {
         quantity: item.qty,
         price: `LKR ${item.stock.price}.00`,
         imageUrl: `http://localhost:8080/Edumart-Backend/product-images/${item.stock.product.id}/image1.png`,
+        status: status
       }))
       : [];
 
@@ -552,7 +561,7 @@ const MyAccountPage = () => {
                 <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.total}</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => fetchOrderDetails(order.id)}
+                    onClick={() => fetchOrderDetails(order.id, order.status)}
                     className="text-green-600 hover:text-green-800 text-sm font-medium cursor-pointer"
                   >
                     View Details
@@ -793,73 +802,251 @@ const MyAccountPage = () => {
   );
 
   // UPDATED: OrderDetailsModal to display images
-  const OrderDetailsModal = () => (
-    <div
-      className={`fixed inset-0 backdrop-blur-xs shadow-2xl bg-black/30 bg-opacity-50 flex justify-center items-center z-50 transition-all duration-300 ease-in-out ${showOrderDetailsModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      onClick={() => setShowOrderDetailsModal(false)}
-    >
+  const OrderDetailsModal = () => {
+    // NEW: State for the Review Modal
+    const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+    const [itemToReview, setItemToReview] = useState<OrderItem | null>(null);
+
+    // NEW: Handlers for the review modal
+    const handleOpenReviewModal = (item: OrderItem) => {
+      setItemToReview(item);
+      // setShowOrderDetailsModal(false);
+      setShowReviewModal(true);
+    };
+
+    const handleReviewSubmit = async (reviewData: ReviewData) => {
+      console.log(reviewData);
+      console.log(itemToReview?.id);
+
+      const reviewDetails = {
+        rating: reviewData.rating,
+        reviewText: reviewData.reviewText,
+        itemId: itemToReview?.id
+      };
+
+      try {
+        const response = await fetch("http://localhost:8080/Edumart-Backend/SubmitProductReview", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reviewDetails)
+        });
+        if (response.ok) {
+          const json = await response.json();
+          if (json.status) {
+            toast.success(json.message);
+            setShowReviewModal(false);
+          } else {
+            toast.error(json.message);
+          }
+        } else {
+          toast.error("SubmitProductReview failed. Please try again");
+        }
+      } catch (error) {
+        toast.error("Error connecting to server");
+        console.error("SubmitProductReview Error:", error);
+      }
+    };
+
+    return (
       <div
-        className={`bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 p-6 transform transition-all duration-300 ${showOrderDetailsModal ? 'scale-100' : 'scale-95'}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`fixed inset-0 backdrop-blur-xs shadow-2xl bg-black/30 bg-opacity-50 flex justify-center items-center z-50 transition-all duration-300 ease-in-out ${showOrderDetailsModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setShowOrderDetailsModal(false)}
       >
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Order Items</h3>
+        <div
+          className={`bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 p-6 transform transition-all duration-300 ${showOrderDetailsModal ? 'scale-100' : 'scale-95'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center border-b pb-3 mb-4">
+            <h3 className="text-xl font-bold text-gray-800">Order Items</h3>
+            <button
+              onClick={() => setShowOrderDetailsModal(false)}
+              className="text-gray-500 hover:text-gray-800"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          {isLoadingOrderItems ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Loading items...</p>
+            </div>
+          ) : (
+            <div className="overflow-y-auto max-h-[60vh]">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-sm font-medium text-gray-600">
+                    <th className="p-3 w-20">Image</th>
+                    <th className="p-3">Product Name</th>
+                    <th className="p-3">Brand</th>
+                    <th className="p-3 text-center">Qty</th>
+                    <th className="p-3 text-right">Price</th>
+                    <th className="p-3 text-right"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedOrderItems.length > 0 ? (
+                    selectedOrderItems.map(item => (
+                      <tr key={item.id} className="border-b">
+                        <td className="p-2">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.productName}
+                            className="w-16 h-16 object-cover rounded-md"
+                            onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/4a5568?text=N/A'; }}
+                          />
+                        </td>
+                        <td className="p-3 font-medium text-gray-800">{item.productName}</td>
+                        <td className="p-3 text-gray-600">{item.brand}</td>
+                        <td className="p-3 text-center text-gray-600">{item.quantity}</td>
+                        <td className="p-3 text-right font-medium text-gray-800">{item.price}</td>
+                        <td className="p-3 text-right font-medium text-gray-800">
+                          {item.status === 'Delivered' ? (
+                            <button
+                              onClick={() => handleOpenReviewModal(item)}
+                              type="button"
+                              className='cursor-pointer hover:bg-edumartHover hover:text-white rounded-full p-2'
+                              title={`Review ${item.productName}`}
+                            >
+                              <MessageSquareHeart />
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not Delivered</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center p-6 text-gray-500">
+                        No items found for this order.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleReviewSubmit}
+          product={itemToReview}
+        />
+      </div>
+    );
+  };
+
+  interface ReviewModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: ReviewData) => void;
+    product: OrderItem | null;
+  }
+
+  const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onSubmit, product }) => {
+    const [rating, setRating] = useState<number>(0);
+    const [hoverRating, setHoverRating] = useState<number>(0);
+    const [reviewText, setReviewText] = useState<string>('');
+
+    useEffect(() => {
+      if (isOpen) {
+        setRating(0);
+        setHoverRating(0);
+        setReviewText('');
+      }
+    }, [isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (rating === 0) {
+        // You can replace this with a toast notification
+        alert('Please select a star rating before submitting.');
+        return;
+      }
+      onSubmit({ rating, reviewText });
+    };
+
+    if (!isOpen) {
+      return null;
+    }
+
+    return (
+      <div
+        className="fixed inset-0 backdrop-blur-sm bg-black/40 flex justify-center items-center z-50 p-4"
+        onClick={onClose}
+      >
+        <div
+          className="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 sm:p-8 transform transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
-            onClick={() => setShowOrderDetailsModal(false)}
-            className="text-gray-500 hover:text-gray-800"
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            aria-label="Close"
           >
             <X size={24} />
           </button>
-        </div>
-        {isLoadingOrderItems ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Loading items...</p>
-          </div>
-        ) : (
-          <div className="overflow-y-auto max-h-[60vh]">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 text-left text-sm font-medium text-gray-600">
-                  <th className="p-3 w-20">Image</th>
-                  <th className="p-3">Product Name</th>
-                  <th className="p-3">Brand</th>
-                  <th className="p-3 text-center">Qty</th>
-                  <th className="p-3 text-right">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedOrderItems.length > 0 ? (
-                  selectedOrderItems.map(item => (
-                    <tr key={item.id} className="border-b">
-                      <td className="p-2">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.productName}
-                          className="w-16 h-16 object-cover rounded-md"
-                          onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/4a5568?text=N/A'; }}
-                        />
-                      </td>
-                      <td className="p-3 font-medium text-gray-800">{item.productName}</td>
-                      <td className="p-3 text-gray-600">{item.brand}</td>
-                      <td className="p-3 text-center text-gray-600">{item.quantity}</td>
-                      <td className="p-3 text-right font-medium text-gray-800">{item.price}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center p-6 text-gray-500">
-                      No items found for this order.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Write a Review</h2>
+            <p className="text-gray-600 mt-1">for {product?.productName || 'this product'}</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {/* Star Rating Section */}
+            <div className="mb-6">
+              <label className="block text-lg font-semibold text-gray-700 mb-3 text-center">Your Rating</label>
+              <div className="flex justify-center items-center space-x-1" onMouseLeave={() => setHoverRating(0)}>
+                {[...Array(5)].map((_, index) => {
+                  const starValue = index + 1;
+                  return (
+                    <button
+                      type="button"
+                      key={starValue}
+                      onClick={() => setRating(starValue)}
+                      onMouseEnter={() => setHoverRating(starValue)}
+                      className="cursor-pointer"
+                      aria-label={`Rate ${starValue} stars`}
+                    >
+                      <Star
+                        size={40}
+                        className="transition-colors duration-200"
+                        fill={starValue <= (hoverRating || rating) ? '#ffc107' : 'none'}
+                        stroke={starValue <= (hoverRating || rating) ? '#ffc107' : '#e4e5e9'}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="reviewText" className="block text-sm font-medium text-gray-700 mb-1">
+                Your Review (Optional)
+              </label>
+              <textarea
+                id="reviewText"
+                rows={5}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+                placeholder="What did you like or dislike? How did you use this product?"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={rating === 0}
+            >
+              Submit Review
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   const renderContent = () => {
     switch (activeSection) {

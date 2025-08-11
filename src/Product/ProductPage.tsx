@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 
@@ -19,7 +20,6 @@ interface Product {
   // reviewCount: number;
 }
 
-// Interface for the main product data from the backend
 interface ProductData {
   mainCategory: string;
   category: string;
@@ -33,6 +33,14 @@ interface ProductData {
   id: string;
 }
 
+interface ReviewData {
+  rating: number;
+  reviewCount: number;
+  reviewText: string;
+  date: string;
+  customer: string;
+}
+
 
 type Tab = 'description' | 'reviews';
 
@@ -40,6 +48,7 @@ interface ProductTabsProps {
   activeTab: Tab;
   setActiveTab: React.Dispatch<React.SetStateAction<Tab>>;
   product: ProductData;
+  reviews: ReviewData[];
 }
 
 interface ProductCardProps {
@@ -50,7 +59,7 @@ interface ProductCardProps {
 // --- SVG Icon Components (Typed for TypeScript) ---
 
 const StarIcon: React.FC<IconProps> = ({ className }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22px" height="22px">
     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
   </svg>
 );
@@ -124,7 +133,7 @@ const kokopayLogoUrl = "https://www.promateworld.com/images/koko.png";
 
 // --- Sub-components ---
 
-const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, product }) => (
+const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, product, reviews }) => (
   <div className="w-full mt-12">
     <div className="border-b border-gray-200">
       <nav className="-mb-px flex space-x-8" aria-label="Tabs">
@@ -138,7 +147,7 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
           onClick={() => setActiveTab('reviews')}
           className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg cursor-pointer ${activeTab === 'reviews' ? 'border-yellow-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 cursor-pointer'}`}
         >
-          Reviews (1)
+          Reviews ({reviews[0]?.reviewCount ?? 0})
         </button>
       </nav>
     </div>
@@ -149,17 +158,25 @@ const ProductTabs: React.FC<ProductTabsProps> = ({ activeTab, setActiveTab, prod
         </p>
       )}
       {activeTab === 'reviews' && (
-        <div>
-          <h3 className="font-semibold text-lg mb-2">1 review for {product.title}</h3>
-          <div className="flex items-start space-x-4">
-            <div className="flex items-center text-yellow-400">
-              {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
-            </div>
-            <p><span className="font-bold">Admin</span> – July 25, 2025</p>
+        reviews.map((item: ReviewData, index) => (
+          <>
+          <div key={index} className='mt-2'>
+            <span className='mb-2'> {item.date}</span>
+            <p><span className="font-semibold">{item.customer}</span></p>
+            <div className="flex items-start space-x-4">
+              <div className="flex items-center text-yellow-400 mt-1">
+                {[...Array(item.rating)].map((_, i) => (
+                  <StarIcon key={i} className="text-yellow-400" />
+                ))}
+              </div>
+              <p className="font-semibold text-lg"> | {item.reviewText}</p>
+            </div>            
           </div>
-          <p className="mt-2">This is a sample review.</p>
-        </div>
+          <hr className='mt-2'/>
+          </>
+        ))
       )}
+
     </div>
   </div>
 );
@@ -333,6 +350,8 @@ const ProductPage: React.FC = () => {
     id: ''
   });
 
+  const [review, setReview] = useState<ReviewData[]>([]);
+
   useEffect(() => {
     const loadProductData = async () => {
       const searchParams = new URLSearchParams(window.location.search);
@@ -385,7 +404,50 @@ const ProductPage: React.FC = () => {
       }
     };
 
+    const loadProductReviews = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const id = searchParams.get('id');
+      if (!id) {
+        toast.error("Product ID is missing from the URL.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8080/Edumart-Backend/LoadProductReviews?id=${id}`, {
+          method: "GET",
+          credentials: "include"
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json.status) {
+
+            const items = json.reviewsList.map((item: any) => ({
+              rating: item.rating,
+              reviewCount: json.reviewsCount,
+              reviewText: item.review_text,
+              date: format(new Date(item.created_at), 'yyyy-MM-dd'),
+              customer: item.user.username
+            }));
+
+            setReview(items);
+
+          } else {
+            console.log(json.message);
+            toast.error(json.message);
+          }
+        } else {
+          console.log("LoadProductReviews failed. Please try again");
+          toast.error("LoadProductReviews failed. Please try again");
+        }
+      } catch (error) {
+        toast.error("Internal Server Error. Please try again later");
+        console.error("LoadProductReviews Error:", error);
+      }
+    };
+
     loadProductData();
+    loadProductReviews();
   }, []);
 
   const handleIncrease = () => {
@@ -497,9 +559,9 @@ const ProductPage: React.FC = () => {
               <span>Brand: <a href="#" className="text-green-600 font-semibold hover:underline">{product.brand}</a></span>
               <div className="flex items-center">
                 <div className="flex items-center text-yellow-400">
-                  {[...Array(5)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
+                  {[...Array(review[0]?.rating ?? 0)].map((_, i) => <StarIcon key={i} className="text-yellow-400" />)}
                 </div>
-                <a href="#" className="ml-2 hover:underline">(5 reviews)</a>
+                <a href="#" className="ml-2 hover:underline">({review[0]?.reviewCount ?? 0} reviews)</a>
               </div>
             </div>
             <hr className="my-4" />
@@ -559,7 +621,7 @@ const ProductPage: React.FC = () => {
 
         {/* --- TABS & RELATED PRODUCTS SECTION --- */}
         <div className="mt-8">
-          <ProductTabs activeTab={activeTab} setActiveTab={setActiveTab} product={product} />
+          <ProductTabs activeTab={activeTab} setActiveTab={setActiveTab} product={product} reviews={review} />
           <RelatedProducts />
         </div>
 
