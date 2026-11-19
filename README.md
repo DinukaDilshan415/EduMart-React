@@ -78,8 +78,6 @@ Customers can browse, search, add to cart and check out. Admins manage products,
 
 ## 📸 Screenshots
 
-> _Add screenshots here: put them in a `docs/` folder and link them like below._
-
 | Home | Product | Cart |
 |---|---|---|
 | ![Home](docs/home.png) | ![Product](docs/product.png) | ![Cart](docs/cart.png) |
